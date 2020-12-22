@@ -21,6 +21,8 @@ public class IMUTest extends LinearOpMode
     BNO055IMU             imu;
     Orientation           lastAngles = new Orientation();
     double                globalAngle, power = .30, correction, rotation;
+
+    //Calls the PIDHardware class
     PIDHardware           pidRotate, pidDrive;
 
     //Declares some methods to compress and reduce tediousness of writing repetitive code.
