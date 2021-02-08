@@ -5,13 +5,16 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Servo;
 
+@Disabled
 @Autonomous(name="ShooterTest", group="Test")
 public class ShooterTest extends LinearOpMode {
 
     /* Declare OpMode members. */
     RobotHardware robot = new RobotHardware();
     private ElapsedTime     runtime = new ElapsedTime();
+
 
     @Override
     public void runOpMode() {

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name="DriverControlled", group="Test")
 
@@ -53,18 +54,47 @@ public class DriverControlled extends OpMode{
         boolean G1leftBumper = gamepad1.left_bumper;
 
         //mecanum drive
-        robot.motor2.setPower((G1leftStickY) - (G1rightStickX) - (G1leftStickX));
-        robot.motor4.setPower((G1leftStickY) - (G1rightStickX) + (G1leftStickX));
-        robot.motor1.setPower((G1leftStickY) + (G1rightStickX) + (G1leftStickX));
-        robot.motor3.setPower((G1leftStickY) + (G1rightStickX) - (G1leftStickX));
+        robot.motor1.setPower((G1leftStickY) + (G1leftStickX) + (G1rightStickX));
+        robot.motor3.setPower((G1leftStickY) - (G1leftStickX) + (G1rightStickX));
+        robot.motor2.setPower((G1leftStickY) - (G1leftStickX) - (G1rightStickX));
+        robot.motor4.setPower((G1leftStickY) + (G1leftStickX) - (G1rightStickX));
 
+        if(G1LT>0) {
+            robot.motor5.setPower(1);
+        }
+        else if(G1y) {
+            robot.motor5.setPower(-1);
+        }
+        else {
+            robot.motor5.setPower(0);
 
+        }
+        if(G1RT>0) {
+            robot.motor7.setPower(.7);
+        }
+        else if(G1rightBumper) {
+            robot.motor7.setPower(.55);
+        }
+        else {
+            robot.motor7.setPower(0);
+        }
+
+        if(G1x) {
+            robot.servo1.setPosition(1.2);
+            robot.servo3.setPosition(1.2);
+        }
+        else {
+            robot.servo1.setPosition(0.5);
+            robot.servo3.setPosition(0.275);
+        }
 
 
         telemetry.addData("motor1 Power", robot.motor1.getPower());
         telemetry.addData("motor2 Power", robot.motor2.getPower());
         telemetry.addData("motor3 Power", robot.motor3.getPower());
         telemetry.addData("motor4 Power", robot.motor4.getPower());
+        telemetry.addData("motor5 Power", robot.motor5.getPower());
+        telemetry.addData("motor7 Power", robot.motor7.getPower());
     }
 
     // RUN ONCE ON stop()

@@ -5,22 +5,25 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
+@Disabled
 @Autonomous(name="IMUTest", group="Test")
 public class IMUTest extends LinearOpMode
 {
     //Calls the RobotHardware class
     RobotHardware robot = new RobotHardware();
+    private ElapsedTime runtime = new ElapsedTime();
 
     BNO055IMU             imu;
     Orientation           lastAngles = new Orientation();
-    double                globalAngle, power = .30, correction, rotation;
+    double                globalAngle, power = .50, correction, rotation;
 
     //Calls the PIDHardware class
     PIDHardware           pidRotate, pidDrive;
@@ -29,32 +32,46 @@ public class IMUTest extends LinearOpMode
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward()
     {
-        robot.motor1.setPower(-power + correction);
-        robot.motor3.setPower(-power + correction);//test
-        robot.motor2.setPower(-power - correction);
-        robot.motor4.setPower(-power - correction);
+        robot.motor1.setPower(power - correction);
+        robot.motor2.setPower(power + correction);
+        robot.motor3.setPower(power - correction);
+        robot.motor4.setPower(power + correction);
     }
     //Same as DriveForward() but in reverse
     public void DriveBackward()
     {
-        robot.motor1.setPower(power + correction);
-        robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(power - correction);
+        robot.motor1.setPower(-power - correction);
+        robot.motor2.setPower(-power + correction);
+        robot.motor3.setPower(-power - correction);
+        robot.motor4.setPower(-power + correction);
     }
     public void StrafeLeft()
     {
-        robot.motor1.setPower(-power + correction);
+        robot.motor1.setPower(-power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(-power - correction);
+        robot.motor4.setPower(-power + correction);
     }
     public void StrafeRight()
     {
-        robot.motor1.setPower(power + correction);
+        robot.motor1.setPower(power - correction);
         robot.motor2.setPower(-power + correction);
         robot.motor3.setPower(-power - correction);
-        robot.motor4.setPower(power - correction);
+        robot.motor4.setPower(power + correction);
+    }
+    public void TurnLeft()
+    {
+        robot.motor1.setPower(-power - correction);
+        robot.motor2.setPower(power + correction);
+        robot.motor3.setPower(-power - correction);
+        robot.motor4.setPower(power + correction);
+    }
+    public void TurnRight()
+    {
+        robot.motor1.setPower(power - correction);
+        robot.motor2.setPower(-power + correction);
+        robot.motor3.setPower(power - correction);
+        robot.motor4.setPower(-power + correction);
     }
     //Stops all 4 motors
     public void StopDriving()
@@ -128,7 +145,7 @@ public class IMUTest extends LinearOpMode
         pidDrive.enable();
 
         //captures System.currentTimeMillis and saves it as startTime. Subtract the later time from this time to get the change in time.
-        long startTime = System.currentTimeMillis();
+        //long startTime = System.currentTimeMillis();
 
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
@@ -147,7 +164,29 @@ public class IMUTest extends LinearOpMode
             telemetry.update();
 
             //The series of instructions the robot will do.
-            DriveForward(); //test motor direction and correction direction
+            StrafeLeft();
+            sleep(1000);
+            StopDriving();
+            sleep(500);
+            DriveForward();
+            sleep(4000);
+            StopDriving();
+            sleep(500);
+            DriveBackward();
+            sleep(1000);
+            StopDriving();
+            sleep(500);
+            StrafeRight();
+            sleep(2500);
+            StopDriving();
+            robot.motor7.setPower(.75);
+            sleep(1500);
+            robot.servo1.setPosition(1.2);
+            sleep(2000);
+            //sleep(500);
+            //rotate(180, .5);
+            //StopDriving();
+            sleep(30000);
         }
         //Turn the motors off (this will happen once when "While opModeIsActive" loop is finished).
         StopDriving();
@@ -155,6 +194,7 @@ public class IMUTest extends LinearOpMode
 
     // Resets the cumulative angle tracking to zero.
     private void resetAngle() {
+        //ZYX
         lastAngles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         globalAngle = 0;
     }
@@ -221,8 +261,7 @@ public class IMUTest extends LinearOpMode
         pidRotate.setTolerance(1);
         pidRotate.enable();
 
-        // getAngle() returns + when rotating counter clockwise (left) and - when rotating
-        // clockwise (right).
+        // getAngle() returns + when rotating counter clockwise (left) and - when rotating clockwise (right).
 
         // rotate until turn is completed.
 
@@ -231,21 +270,21 @@ public class IMUTest extends LinearOpMode
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0)
             {
-                //Turn right
+                TurnRight();
                 sleep(100);
             }
 
             do
             {
                 power = pidRotate.performPID(getAngle()); // power will be - on right turn.
-                //Turn left
+                TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
         }
         else    // left turn.
             do
             {
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
-                //Turn left
+                TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
 
         // turn the motors off.

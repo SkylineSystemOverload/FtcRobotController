@@ -14,15 +14,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-import java.lang.reflect.Array;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import java.util.ArrayList;
-
-@Autonomous(name="AndysOPMode", group="Test")
-public class AndysOPMode extends LinearOpMode
+@Autonomous(name="BluePowershot", group="Test")
+public class BluePowershot extends LinearOpMode
 {
     //Calls the RobotHardware class
     RobotHardware robot = new RobotHardware();
@@ -89,6 +86,7 @@ public class AndysOPMode extends LinearOpMode
         robot.motor4.setPower(0);
     }
 
+
     //This is what happens when the init button is pushed.
     @Override
     public void runOpMode() throws InterruptedException
@@ -152,27 +150,11 @@ public class AndysOPMode extends LinearOpMode
         pidDrive.enable();
 
         //captures System.currentTimeMillis and saves it as startTime. Subtract the later time from this time to get the change in time.
-        long startTime = System.currentTimeMillis();
+       long startTime = System.currentTimeMillis();
 
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
-
-        // array instructions
-        int totalInstructions = 10;
-        ArrayList<String> instructions = new ArrayList<String>();
-        ArrayList<Integer> instructionTimes = new ArrayList<Integer>();
-
-        // add to insttuctions
-        instructions.add("drivef");
-        instructions.add("strafer");
-
-        // add times for above
-        instructionTimes.add(1000);
-        instructionTimes.add(2000);
-
-
-
         while (opModeIsActive())
         {
             // Use PID with imu input to drive in a straight line.
@@ -188,7 +170,7 @@ public class AndysOPMode extends LinearOpMode
 
             //The series of instructions the robot will do.
             //Reverse Collector
-            if(GetElapsedTime(startTime) > 0 && System.currentTimeMillis() - startTime < 500) {
+            if(System.currentTimeMillis() - startTime > 0 && System.currentTimeMillis() - startTime < 500) {
                 robot.motor5.setPower(-0.5);
             }
             //Turn Off Collector

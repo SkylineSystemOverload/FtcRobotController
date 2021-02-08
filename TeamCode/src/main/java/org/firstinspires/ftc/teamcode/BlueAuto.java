@@ -1,5 +1,23 @@
-// Simple autonomous program that uses an IMU to drive in a straight line.
-// Uses REV Hub's built in IMU in place of a gyro.
+/*
+ * Copyright (c) 2020 OpenFTC Team
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 package org.firstinspires.ftc.teamcode;
 
@@ -7,29 +25,37 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import java.lang.reflect.Array;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import java.util.ArrayList;
-
-@Autonomous(name="AndysOPMode", group="Test")
-public class AndysOPMode extends LinearOpMode
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvInternalCamera;
+import org.openftc.easyopencv.OpenCvPipeline;
+@Disabled
+@Autonomous
+public class BlueAuto extends LinearOpMode
 {
+    OpenCvInternalCamera phoneCam;
+    SkystoneDeterminationPipeline pipeline;
+
     //Calls the RobotHardware class
     RobotHardware robot = new RobotHardware();
     private ElapsedTime runtime = new ElapsedTime();
 
-    BNO055IMU             imu;
-    Orientation           lastAngles = new Orientation();
+    BNO055IMU imu;
+    Orientation lastAngles = new Orientation();
     double                globalAngle, power = .50, correction, rotation;
 
     //Calls the PIDHardware class
@@ -89,10 +115,29 @@ public class AndysOPMode extends LinearOpMode
         robot.motor4.setPower(0);
     }
 
-    //This is what happens when the init button is pushed.
     @Override
     public void runOpMode() throws InterruptedException
     {
+
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
+        pipeline = new SkystoneDeterminationPipeline();
+        phoneCam.setPipeline(pipeline);
+
+        // We set the viewport policy to optimized view so the preview doesn't appear 90 deg
+        // out when the RC activity is in portrait. We do our actual image processing assuming
+        // landscape orientation, though.
+        phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+
+        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+            }
+        });
+
         // Initializes hardware when init is pressed on the phone
         robot.init(hardwareMap);
 
@@ -152,29 +197,21 @@ public class AndysOPMode extends LinearOpMode
         pidDrive.enable();
 
         //captures System.currentTimeMillis and saves it as startTime. Subtract the later time from this time to get the change in time.
-        long startTime = System.currentTimeMillis();
+        //long startTime = System.currentTimeMillis();
 
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
 
-        // array instructions
-        int totalInstructions = 10;
-        ArrayList<String> instructions = new ArrayList<String>();
-        ArrayList<Integer> instructionTimes = new ArrayList<Integer>();
-
-        // add to insttuctions
-        instructions.add("drivef");
-        instructions.add("strafer");
-
-        // add times for above
-        instructionTimes.add(1000);
-        instructionTimes.add(2000);
-
-
-
         while (opModeIsActive())
         {
+            telemetry.addData("Analysis", pipeline.getAnalysis());
+            telemetry.addData("Position", pipeline.position);
+            telemetry.update();
+
+            // Don't burn CPU cycles busy-looping in this sample
+            sleep(50);
+
             // Use PID with imu input to drive in a straight line.
             //renames pidDrive.performPID(getAngle()) to correction for simple nomenclature.
             correction = pidDrive.performPID(getAngle());
@@ -187,101 +224,137 @@ public class AndysOPMode extends LinearOpMode
             telemetry.update();
 
             //The series of instructions the robot will do.
-            //Reverse Collector
-            if(GetElapsedTime(startTime) > 0 && System.currentTimeMillis() - startTime < 500) {
-                robot.motor5.setPower(-0.5);
-            }
-            //Turn Off Collector
-            else if(System.currentTimeMillis() - startTime > 500 && System.currentTimeMillis() - startTime < 1000) {
-                robot.motor5.setPower(0);
-            }
-            //Strafe Right
-            else if(System.currentTimeMillis() - startTime > 1000 && System.currentTimeMillis() - startTime < 1500) {
-                StrafeRight();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 1500 && System.currentTimeMillis() - startTime < 2000) {
-                StopDriving();
-            }
-            //DriveForward
-            else if(System.currentTimeMillis() - startTime > 2000 && System.currentTimeMillis() - startTime < 6250) {
-                DriveForward();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 5750 && System.currentTimeMillis() - startTime < 6250) {
-                StopDriving();
-            }
-            //Strafe Right
-            else if(System.currentTimeMillis() - startTime > 6250 && System.currentTimeMillis() - startTime < 6500) {
-                StrafeRight();
-            }
-            //StopDriving
-            else if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 7000) {
-                StopDriving();
-            }
-            //Shoot
-            else if(System.currentTimeMillis() - startTime > 8500 && System.currentTimeMillis() - startTime < 9500) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(System.currentTimeMillis() - startTime > 9500 && System.currentTimeMillis() - startTime < 10500) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Strafe Left
-            else if(System.currentTimeMillis() - startTime > 10500 && System.currentTimeMillis() - startTime < 10900) {
-                StrafeLeft();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 10900 && System.currentTimeMillis() - startTime < 11400) {
-                StopDriving();
-            }
-            //Shoot
-            else if(System.currentTimeMillis() - startTime > 11400 && System.currentTimeMillis() - startTime < 12400) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(System.currentTimeMillis() - startTime > 12400 && System.currentTimeMillis() - startTime < 12900) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Strafe Left***
-            else if(System.currentTimeMillis() - startTime > 12900 && System.currentTimeMillis() - startTime < 13400) {
-                StrafeRight();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 13400 && System.currentTimeMillis() - startTime < 13900) {
-                StopDriving();
-            }
-            /*//Shoot
-            else if(System.currentTimeMillis() - startTime > 13900 && System.currentTimeMillis() - startTime < 14900) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(System.currentTimeMillis() - startTime > 14900 && System.currentTimeMillis() - startTime < 15400) {
-                robot.servo1.setPosition(0.5);
-            }*/
-            //Drive Forward
-            else if(System.currentTimeMillis() - startTime > 15400 && System.currentTimeMillis() - startTime < 15900) {
-                DriveForward();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 15900 && System.currentTimeMillis() - startTime < 30000) {
-                StopDriving();
-            }
-            //Turn on launcher
-            if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 15400) {
-                robot.motor7.setPower(.55);
-            }
-            //Turn Off Shooter
-            else if(System.currentTimeMillis() - startTime > 15400 && System.currentTimeMillis() - startTime < 16400) {
-                robot.motor7.setPower(0);
-            }
+            StrafeLeft();
+            sleep(1000);
+            StopDriving();
+            sleep(500);
+            DriveForward();
+            sleep(4000);
+            StopDriving();
+            sleep(500);
+            DriveBackward();
+            sleep(1000);
+            StopDriving();
+            sleep(500);
+            StrafeRight();
+            sleep(2500);
+            StopDriving();
+            robot.motor7.setPower(.75);
+            sleep(1500);
+            robot.servo1.setPosition(1.2);
+            sleep(2000);
+            //sleep(500);
+            //rotate(180, .5);
+            //StopDriving();
+            sleep(30000);
         }
-        //Turn the motors off (this will happen once when "While opModeIsActive" loop is finished).
         StopDriving();
-        robot.motor5.setPower(0);
-        robot.motor7.setPower(0);
     }
 
+    public static class SkystoneDeterminationPipeline extends OpenCvPipeline
+    {
+        /*
+         * An enum to define the skystone position
+         */
+        public enum RingPosition
+        {
+            FOUR,
+            ONE,
+            NONE
+        }
+
+        /*
+         * Some color constants
+         */
+        static final Scalar BLUE = new Scalar(0, 0, 255);
+        static final Scalar GREEN = new Scalar(0, 255, 0);
+
+        /*
+         * The core values which define the location and size of the sample regions
+         */
+        //Default is 181,982
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+
+        static final int REGION_WIDTH = 35;
+        static final int REGION_HEIGHT = 25;
+
+        final int FOUR_RING_THRESHOLD = 150;
+        final int ONE_RING_THRESHOLD = 135;
+
+        Point region1_pointA = new Point(
+                REGION1_TOPLEFT_ANCHOR_POINT.x,
+                REGION1_TOPLEFT_ANCHOR_POINT.y);
+        Point region1_pointB = new Point(
+                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
+                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
+
+        /*
+         * Working variables
+         */
+        Mat region1_Cb;
+        Mat YCrCb = new Mat();
+        Mat Cb = new Mat();
+        int avg1;
+
+        // Volatile since accessed by OpMode thread w/o synchronization
+        private volatile RingPosition position = RingPosition.FOUR;
+
+        /*
+         * This function takes the RGB frame, converts to YCrCb,
+         * and extracts the Cb channel to the 'Cb' variable
+         */
+        void inputToCb(Mat input)
+        {
+            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
+            Core.extractChannel(YCrCb, Cb, 1);
+        }
+
+        @Override
+        public void init(Mat firstFrame)
+        {
+            inputToCb(firstFrame);
+
+            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
+        }
+
+        @Override
+        public Mat processFrame(Mat input)
+        {
+            inputToCb(input);
+
+            avg1 = (int) Core.mean(region1_Cb).val[0];
+
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region1_pointA, // First point which defines the rectangle
+                    region1_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            position = RingPosition.FOUR; // Record our analysis
+            if(avg1 > FOUR_RING_THRESHOLD){
+                position = RingPosition.FOUR;
+            }else if (avg1 > ONE_RING_THRESHOLD){
+                position = RingPosition.ONE;
+            }else{
+                position = RingPosition.NONE;
+            }
+
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region1_pointA, // First point which defines the rectangle
+                    region1_pointB, // Second point which defines the rectangle
+                    GREEN, // The color the rectangle is drawn in
+                    -1); // Negative thickness means solid fill
+
+            return input;
+        }
+
+        public int getAnalysis()
+        {
+            return avg1;
+        }
+    }
     // Resets the cumulative angle tracking to zero.
     private void resetAngle() {
         //ZYX

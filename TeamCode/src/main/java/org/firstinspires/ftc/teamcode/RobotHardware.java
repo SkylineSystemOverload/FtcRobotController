@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -17,7 +18,7 @@ public class RobotHardware {
     public DcMotor motor5;
     public DcMotor motor6;
     public DcMotor motor7;
-    /*public DcMotor motor8;*/
+    /* DcMotor motor8;*/
     public Servo servo1;
     public Servo servo2;
     public Servo servo3;
@@ -86,14 +87,15 @@ public class RobotHardware {
         /*motor8.setPower(0);*/
 
         //SET MOTOR MODES
-        motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //...RunMode.RUN_TO_POSITION
-        motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor4.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor6.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor7.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        /*motor8.setMode(DcMotor.RunMode.RUN_USING_ENCODER);*/
+
+        motor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); //...RunMode.RUN_TO_POSITION
+        motor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor3.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor4.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor5.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor6.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor7.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        /*motor8.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
 
         //SET MOTOR zeroPowerBehavior
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); //...ZeroPowerBehavior.FLOAT
@@ -110,11 +112,10 @@ public class RobotHardware {
         motor2.setDirection(DcMotor.Direction.FORWARD);
         motor3.setDirection(DcMotor.Direction.REVERSE);
         motor4.setDirection(DcMotor.Direction.FORWARD);
-        /*motor6.setDirection(DcMotor.Direction.REVERSE);*/
-
+        motor5.setDirection(DcMotor.Direction.REVERSE);
         //SET SERVO POSITION
-        servo1.setPosition(1);
-        servo2.setPosition(0.5);
+        servo1.setPosition(.5);
+        servo2.setPosition(-.1);
         servo3.setPosition(0.275);
 
         //CALIBRATE SENSORS

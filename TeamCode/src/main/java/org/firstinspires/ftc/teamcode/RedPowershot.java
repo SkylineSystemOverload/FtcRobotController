@@ -14,15 +14,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
-import java.lang.reflect.Array;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import java.util.ArrayList;
-
-@Autonomous(name="AndysOPMode", group="Test")
-public class AndysOPMode extends LinearOpMode
+@Autonomous(name="RedPowershot", group="Test")
+public class RedPowershot extends LinearOpMode
 {
     //Calls the RobotHardware class
     RobotHardware robot = new RobotHardware();
@@ -88,6 +85,7 @@ public class AndysOPMode extends LinearOpMode
         robot.motor3.setPower(0);
         robot.motor4.setPower(0);
     }
+
 
     //This is what happens when the init button is pushed.
     @Override
@@ -157,22 +155,6 @@ public class AndysOPMode extends LinearOpMode
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
-
-        // array instructions
-        int totalInstructions = 10;
-        ArrayList<String> instructions = new ArrayList<String>();
-        ArrayList<Integer> instructionTimes = new ArrayList<Integer>();
-
-        // add to insttuctions
-        instructions.add("drivef");
-        instructions.add("strafer");
-
-        // add times for above
-        instructionTimes.add(1000);
-        instructionTimes.add(2000);
-
-
-
         while (opModeIsActive())
         {
             // Use PID with imu input to drive in a straight line.
@@ -188,32 +170,32 @@ public class AndysOPMode extends LinearOpMode
 
             //The series of instructions the robot will do.
             //Reverse Collector
-            if(GetElapsedTime(startTime) > 0 && System.currentTimeMillis() - startTime < 500) {
+            if(System.currentTimeMillis() - startTime > 0 && System.currentTimeMillis() - startTime < 500) {
                 robot.motor5.setPower(-0.5);
             }
             //Turn Off Collector
             else if(System.currentTimeMillis() - startTime > 500 && System.currentTimeMillis() - startTime < 1000) {
                 robot.motor5.setPower(0);
             }
-            //Strafe Right
+            //Strafe Left
             else if(System.currentTimeMillis() - startTime > 1000 && System.currentTimeMillis() - startTime < 1500) {
-                StrafeRight();
+                StrafeLeft();
             }
             //Stop Driving
             else if(System.currentTimeMillis() - startTime > 1500 && System.currentTimeMillis() - startTime < 2000) {
                 StopDriving();
             }
             //DriveForward
-            else if(System.currentTimeMillis() - startTime > 2000 && System.currentTimeMillis() - startTime < 6250) {
+            else if(System.currentTimeMillis() - startTime > 2000 && System.currentTimeMillis() - startTime < 5900) {
                 DriveForward();
             }
             //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 5750 && System.currentTimeMillis() - startTime < 6250) {
+            else if(System.currentTimeMillis() - startTime > 5900 && System.currentTimeMillis() - startTime < 6250) {
                 StopDriving();
             }
-            //Strafe Right
+            //Strafe Left
             else if(System.currentTimeMillis() - startTime > 6250 && System.currentTimeMillis() - startTime < 6500) {
-                StrafeRight();
+                StrafeLeft();
             }
             //StopDriving
             else if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 7000) {
@@ -227,9 +209,9 @@ public class AndysOPMode extends LinearOpMode
             else if(System.currentTimeMillis() - startTime > 9500 && System.currentTimeMillis() - startTime < 10500) {
                 robot.servo1.setPosition(0.5);
             }
-            //Strafe Left
+            //Strafe Right
             else if(System.currentTimeMillis() - startTime > 10500 && System.currentTimeMillis() - startTime < 10900) {
-                StrafeLeft();
+                StrafeRight();
             }
             //Stop Driving
             else if(System.currentTimeMillis() - startTime > 10900 && System.currentTimeMillis() - startTime < 11400) {
@@ -243,9 +225,9 @@ public class AndysOPMode extends LinearOpMode
             else if(System.currentTimeMillis() - startTime > 12400 && System.currentTimeMillis() - startTime < 12900) {
                 robot.servo1.setPosition(0.5);
             }
-            //Strafe Left***
+            //Strafe Right****
             else if(System.currentTimeMillis() - startTime > 12900 && System.currentTimeMillis() - startTime < 13400) {
-                StrafeRight();
+                StrafeLeft();
             }
             //Stop Driving
             else if(System.currentTimeMillis() - startTime > 13400 && System.currentTimeMillis() - startTime < 13900) {
