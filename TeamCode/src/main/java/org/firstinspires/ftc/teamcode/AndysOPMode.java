@@ -157,6 +157,7 @@ public class AndysOPMode extends LinearOpMode {
     //static final double   COUNTS_PER_MOTOR_REV = 560 ;
     //static final double   MAX_ENCODER_TICKS_PER_MIN = (300 * COUNTS_PER_MOTOR_REV);
     //double Speed = ;
+    private ElapsedTime     runtime = new ElapsedTime();
 
     //Calls the PIDHardware class
     PIDHardware pidRotate, pidDrive;
@@ -174,27 +175,25 @@ public class AndysOPMode extends LinearOpMode {
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward() // key is "driveForward"
     {
-        /*double StartTime = 0;
-        double currentPower = currentRPM*300; //300 is motor max RPM
+        /*double currentPower = robot.motor1.getPower();
         double targetPower = power;
-        double OneRotation = 560;
-        if (robot.motor1.getCurrentPosition() >= 0) {
-            double initRotation = robot.motor1.getCurrentPosition()/OneRotation;
-            sleep(100);
-            idle();
-            double finalRotation = robot.motor1.getCurrentPosition()/OneRotation;
-            double currentRPM = finalRotation-initRotation*600; //600 multiplies the wait period (100ms) by 10 for one second, and then by 60 to get a minute
-            sleep(100);
-            idle();
-        }
+        runtime.reset();
 
         if (targetPower > currentPower) { //LOOP THIS CONDITION, BUT FIND ANOTHER WAY TO PREVENT THE ADDITION FROM LOOPING
-        double newPower = currentPower + 3*Math.pow((System.currentTimeMillis()-StartTime),2);
-    }
-        robot.motor1.setPower(newPower - correction);
-        if (newPower > targetPower) {
+            double newPower = currentPower + 3*Math.pow(runtime.milliseconds(),2);
+        }
+        else if (targetPower < currentPower) { //LOOP THIS CONDITION, BUT FIND ANOTHER WAY TO PREVENT THE ADDITION FROM LOOPING
+            double newPower = currentPower + -3*Math.pow(runtime.milliseconds(),2);
+        }
+        else {
+            double newPower = targetPower;
+        }
+
+        if (newPower > targetPower || newPower < targetPower) {
         newPower = targetPower;
-    }*/
+        }
+        robot.motor1.setPower(newPower - correction);*/
+
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(power - correction);
