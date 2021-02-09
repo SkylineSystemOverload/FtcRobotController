@@ -174,6 +174,27 @@ public class AndysOPMode extends LinearOpMode {
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward() // key is "driveForward"
     {
+        /*double StartTime = 0;
+        double currentPower = currentRPM*300; //300 is motor max RPM
+        double targetPower = power;
+        double OneRotation = 560;
+        if (robot.motor1.getCurrentPosition() >= 0) {
+            double initRotation = robot.motor1.getCurrentPosition()/OneRotation;
+            sleep(100);
+            idle();
+            double finalRotation = robot.motor1.getCurrentPosition()/OneRotation;
+            double currentRPM = finalRotation-initRotation*600; //600 multiplies the wait period (100ms) by 10 for one second, and then by 60 to get a minute
+            sleep(100);
+            idle();
+        }
+
+        if (targetPower > currentPower) { //LOOP THIS CONDITION, BUT FIND ANOTHER WAY TO PREVENT THE ADDITION FROM LOOPING
+        double newPower = currentPower + 3*Math.pow((System.currentTimeMillis()-StartTime),2);
+    }
+        robot.motor1.setPower(newPower - correction);
+        if (newPower > targetPower) {
+        newPower = targetPower;
+    }*/
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(power - correction);
@@ -467,6 +488,9 @@ public class AndysOPMode extends LinearOpMode {
         //lastAngles is new Orientation() as declared near the beginning.
         double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
 
+        // update information on the driver station phone screen
+        telemetry.addData("Driving Instructions", "Success");
+        telemetry.update();
 
         //If the angle goes below -180, start subtracting the change in the angle (so -180 is the greatest change in the angle, -360 would be 0).
         //Returns a positive value (left) if the robot turns more than 180 deg right.
