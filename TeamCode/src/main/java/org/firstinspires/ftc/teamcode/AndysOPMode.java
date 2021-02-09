@@ -182,19 +182,20 @@ public class AndysOPMode extends LinearOpMode {
         //NOTE* If the motors were starting at different speeds, you'd have to dynamically adjust for that.
         //Figuring out a way to dynamically adjust the power so that the robot slows down even more to allow time for the other motors to catch up is beyond me.
         //It would create multiple different curves for each motor and would add another factor to consider when adjusting time intervals.
+        double newPower;
         double currentPower = robot.motor1.getPower();
 
         double targetPower = power; //power, as defined earlier in the code, will be named targetPower
         runtime.reset(); //resets the time
 
         if (targetPower > currentPower) { //LOOP THIS CONDITION, BUT FIND ANOTHER WAY TO PREVENT THE ADDITION FROM LOOPING
-            double newPower = currentPower + 3*Math.pow(runtime.milliseconds(),2); //The main equation: adds a power-curve to whatever the current power was
+            newPower = currentPower + 3*Math.pow(runtime.milliseconds(),2); //The main equation: adds a power-curve to whatever the current power was
         }
         else if (targetPower < currentPower) { //LOOP THIS CONDITION, BUT FIND ANOTHER WAY TO PREVENT THE ADDITION FROM LOOPING
-            double newPower = currentPower + -3*Math.pow(runtime.milliseconds(),2); //The main equation: adds a power-curve to whatever the current power was
+            newPower = currentPower + -3*Math.pow(runtime.milliseconds(),2); //The main equation: adds a power-curve to whatever the current power was
         }
         else {
-            double newPower = targetPower;
+            newPower = targetPower;
         }
 
         if (newPower > targetPower && targetPower > currentPower) {
