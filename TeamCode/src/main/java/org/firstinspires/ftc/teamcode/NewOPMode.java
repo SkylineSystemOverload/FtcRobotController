@@ -31,8 +31,8 @@ public class NewOPMode extends LinearOpMode {
     // op mode instruction classes --------------------------------------------
     public class MovingInstruction {
         // private class variables
-        private long startTime;
-        private long duration;
+        private final long startTime;
+        private final long stopTime;
         private boolean dead = false; // instruction handler checks if this is false, if false then instruction handler removes the instruction from the arraylist
         String method;
 
@@ -42,14 +42,14 @@ public class NewOPMode extends LinearOpMode {
             // has a method for updating
             // stores a boolean that tells if the instruction is now useless (when the instruction is done)
             this.startTime = startTime;
-            this.duration = duration;
+            this.stopTime = this.startTime + duration;
             this.method = methodKey;
         }
 
         // called in the instruction handler
         public void Update(long elapsedTime) {
             // checks if the instruction can be done
-            if (elapsedTime >= this.startTime && elapsedTime < this.startTime + this.duration) {
+            if (elapsedTime >= this.startTime && elapsedTime < this.stopTime) {
                 // do the method using switch case
                 switch (this.method) {
                     case "driveForward":
@@ -64,55 +64,51 @@ public class NewOPMode extends LinearOpMode {
                         TurnLeft();
                     case "turnRight" :
                         TurnRight();
-                    default:
+                    default :
                         StopDriving();
                 }
             }
-            else if (elapsedTime > this.startTime + this.duration){
+            else if (elapsedTime > this.stopTime){
                 // declare instruction dead
-                boolean dead = true;
+                this.dead = true;
+                StopDriving();
             }
         }
     }
 
-    public class MotorInstruction {
+    public static class MotorInstruction {
         // private class variable
-        private long startTime;
-        private long duration;
-        private double power;
+        private final long startTime;
+        private final double power;
         private boolean dead = false;
-        private DcMotor motorID;
+        private final DcMotor motorID;
 
-        public MotorInstruction(long startTime, long duration, double power, DcMotor motorID ) {
+        public MotorInstruction(long startTime, double power, DcMotor motorID ) {
             // stores start and end time
             // stores the instructions method key
             // has a method for updating
             // stores a boolean that tells if the instruction is now useless (when the instruction is done)
             this.startTime = startTime;
-            this.duration = duration;
             this.power = power;
             this.motorID = motorID;
         }
         // called in the instruction handler
         public void Update(long elapsedTime) {
             // checks if the instruction can be done
-            if (elapsedTime >= startTime && elapsedTime < startTime + duration) {
+            if (elapsedTime >= this.startTime) {
                 // set the motor power
-                motorID.setPower(power);
-            }
-            else if (elapsedTime > startTime + duration){
-                // declare instruction dead
-                dead = true;
+                this.motorID.setPower(this.power);
+                this.dead = true;
             }
         }
     }
 
-    public class ServoInstruction {
+    public static class ServoInstruction {
         // private vars
-        private long startTime;
+        private final long startTime;
         private boolean dead = false;
-        private double position;
-        private Servo servoID;
+        private final double position;
+        private final Servo servoID;
 
         public ServoInstruction(long startTime, double position, Servo servoID) {
             // stores start and end time
@@ -126,10 +122,10 @@ public class NewOPMode extends LinearOpMode {
         // called in the instruction handler
         public void Update(long elapsedTime) {
             // checks if the instruction can be done
-            if (elapsedTime >= startTime) {
+            if (elapsedTime >= this.startTime) {
                 // set the servo's position
-                servoID.setPosition(position);
-                dead = true;
+                this.servoID.setPosition(this.position);
+                this.dead = true;
             }
         }
     }
@@ -256,7 +252,6 @@ public class NewOPMode extends LinearOpMode {
             }
         }
 
-
         // iterate through and remove dead instructions
         for (MovingInstruction i : deadMovingInstructions) {
             if (i.dead) {
@@ -281,8 +276,8 @@ public class NewOPMode extends LinearOpMode {
         movingInstructions.add(new MovingInstruction(startTime, duration, methodKey));
     }
 
-    public void AddMotorInstruction(long startTime, long duration, double power, DcMotor motorID) { // update to add the motor's id
-        motorInstructions.add(new MotorInstruction(startTime, duration, power, motorID));
+    public void AddMotorInstruction(long startTime, double power, DcMotor motorID) { // update to add the motor's id
+        motorInstructions.add(new MotorInstruction(startTime, power, motorID));
     }
 
     public void AddServoInstruction(long startTime, double position, Servo servoID) { // update to add the servo's id
@@ -359,25 +354,19 @@ public class NewOPMode extends LinearOpMode {
         telemetry.addData("Adding Instructions", "Starting");
         telemetry.update();
         AddDrivingInstruction(1000, 500, "strafeRight"); //Strafe Right
-        AddDrivingInstruction(1500, 500, "no"); //Stop Driving
         AddDrivingInstruction(2000, 3750, "driveForward"); //DriveForward
-        AddDrivingInstruction(5750, 500, "stop"); //Stop Driving
         AddDrivingInstruction(6250, 250, "strafeRight"); //Strafe Right
-        AddDrivingInstruction(6500, 500, "please"); //Stop Driving
         AddDrivingInstruction(10500, 400, "strafeLeft"); //Strafe Left
-        AddDrivingInstruction(10900, 500, "AHHHHH"); //Stop Driving
         AddDrivingInstruction(12900, 400, "strafeLeft"); //Strafe Left
-        AddDrivingInstruction(13300, 600, "WHY"); //Stop Driving
         AddDrivingInstruction(15400, 500, "driveForward"); //DriveForward
-        AddDrivingInstruction(15900, 15000, "ThisIsUnethical"); //Stop Driving
         telemetry.addData("Moving Instructions", "Success");
         telemetry.update();
 
         // motor instructions
-        AddMotorInstruction(0, 500, -0.5, robot.motor5); //Reverse Collector
-        AddMotorInstruction(500, 500, 0, robot.motor5); //Turn Off Collector
-        AddMotorInstruction(6500, 8900, 0.55, robot.motor7); //Turn On Shooter
-        AddMotorInstruction(15400, 1000, 0, robot.motor7); //Turn Off Shooter
+        AddMotorInstruction(0, -0.5, robot.motor5); //Reverse Collector
+        AddMotorInstruction(500, 0, robot.motor5); //Turn Off Collector
+        AddMotorInstruction(6500, 0.55, robot.motor7); //Turn On Shooter
+        AddMotorInstruction(15400, 0, robot.motor7); //Turn Off Shooter
         telemetry.addData("Motor Instructions", "Success");
         telemetry.update();
 
@@ -397,7 +386,7 @@ public class NewOPMode extends LinearOpMode {
         // autonomous loop (when auton is started) -----------------------------
         while (opModeIsActive()) {
 
-            if (started == false) {
+            if (!started) {
                 started = true;
                 startTime = System.currentTimeMillis();
             }
