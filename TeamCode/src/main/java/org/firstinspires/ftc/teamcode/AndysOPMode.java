@@ -3,10 +3,13 @@
 
 package org.firstinspires.ftc.teamcode;
 
+// imports ---------------------------------------------------------------------
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -15,73 +18,204 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.lang.reflect.Array;
+import java.util.ConcurrentModificationException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import java.util.ArrayList;
 
-@Autonomous(name="AndysOPMode", group="Test")
-public class AndysOPMode extends LinearOpMode
-{
+// op mode class ---------------------------------------------------------------
+@Autonomous(name = "NewOPMode", group = "Test")
+public class NewOPMode extends LinearOpMode {
+    // instruction keys --------------------------------------------------------
+    // these keys make typing them into the add instruction methods easier to autocomplete
+    final int driveForward = 0;
+    final int driveBackward = 1;
+    final int strafeLeft = 2;
+    final int strafeRight = 3;
+    final int turnLeft = 4;
+    final int turnRight = 5;
+    final int stopDriving = 6;
+
+    // op mode instruction classes --------------------------------------------
+    public class MovingInstruction {
+        // private class variables
+        private final long startTime;
+        private final long stopTime;
+        private boolean dead = false; // instruction handler checks if this is false, if false then instruction handler removes the instruction from the arraylist
+        private final int method;
+
+        public MovingInstruction(long startTime, long duration, int methodKey) {
+            // stores start and end time
+            // stores the instructions method key
+            // has a method for updating
+            // stores a boolean that tells if the instruction is now useless (when the instruction is done)
+            this.startTime = startTime;
+            this.stopTime = this.startTime + duration;
+            this.method = methodKey;
+        }
+
+        // called in the instruction handler
+        public void Update(long elapsedTime) {
+            // checks if the instruction can be done
+            if (elapsedTime >= this.startTime && elapsedTime < this.stopTime) {
+                // do the method using switch case
+                switch (this.method) {
+                    case driveForward :
+                        DriveForward();
+                    case driveBackward :
+                        DriveBackward();
+                    case strafeLeft :
+                        StrafeLeft();
+                    case strafeRight :
+                        StrafeRight();
+                    case turnLeft :
+                        TurnLeft();
+                    case turnRight :
+                        TurnRight();
+                    default :
+                        StopDriving();
+                }
+            }
+            else if (elapsedTime > this.stopTime){
+                // declare instruction dead
+                this.dead = true;
+                StopDriving();
+            }
+        }
+    }
+
+    public static class MotorInstruction {
+        // private class variable
+        private final long startTime;
+        private final double power;
+        private boolean dead = false;
+        private final DcMotor motorID;
+
+        public MotorInstruction(long startTime, double power, DcMotor motorID ) {
+            // stores start and end time
+            // stores the instructions method key
+            // has a method for updating
+            // stores a boolean that tells if the instruction is now useless (when the instruction is done)
+            this.startTime = startTime;
+            this.power = power;
+            this.motorID = motorID;
+        }
+        // called in the instruction handler
+        public void Update(long elapsedTime) {
+            // checks if the instruction can be done
+            if (elapsedTime >= this.startTime) {
+                // set the motor power
+                this.motorID.setPower(this.power);
+                this.dead = true;
+            }
+        }
+    }
+
+    public static class ServoInstruction {
+        // private vars
+        private final long startTime;
+        private boolean dead = false;
+        private final double position;
+        private final Servo servoID;
+
+        public ServoInstruction(long startTime, double position, Servo servoID) {
+            // stores start and end time
+            // stores the instructions method key
+            // has a method for updating
+            // stores a boolean that tells if the instruction is now useless (when the instruction is done)
+            this.startTime = startTime;
+            this.position = position;
+            this.servoID = servoID;
+        }
+        // called in the instruction handler
+        public void Update(long elapsedTime) {
+            // checks if the instruction can be done
+            if (elapsedTime >= this.startTime) {
+                // set the servo's position
+                this.servoID.setPosition(this.position);
+                this.dead = true;
+            }
+        }
+    }
+
+    // op mode global vars -----------------------------------------------------
     //Calls the RobotHardware class
     RobotHardware robot = new RobotHardware();
-    private ElapsedTime runtime = new ElapsedTime();
 
-    BNO055IMU             imu;
-    Orientation           lastAngles = new Orientation();
-    double                globalAngle, power = .50, correction, rotation;
+    BNO055IMU imu;
+    Orientation lastAngles = new Orientation();
+    double globalAngle, power = .50, correction, rotation;
+    //static final double   COUNTS_PER_MOTOR_REV = 560 ;
+    //static final double   MAX_ENCODER_TICKS_PER_MIN = (300 * COUNTS_PER_MOTOR_REV);
+    //double Speed = ;
 
     //Calls the PIDHardware class
-    PIDHardware           pidRotate, pidDrive;
+    PIDHardware pidRotate, pidDrive;
 
+    // auton instruction vars --------------------------------------------------
+    // get start time to zero
+
+    // arraylists that stores the instructions name and the time (milliseconds) for it to run
+    ArrayList<MovingInstruction> movingInstructions = new ArrayList<>();
+    ArrayList<MotorInstruction> motorInstructions = new ArrayList<>();
+    ArrayList<ServoInstruction> servoInstructions = new ArrayList<>();
+
+    // movement methods --------------------------------------------------------
     //Declares some methods to compress and reduce tediousness of writing repetitive code.
     //Every time the method DriveForward() is called,  it will do the instructions within the method
-    public void DriveForward()
+    public void DriveForward() // key is "driveForward"
     {
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(power - correction);
         robot.motor4.setPower(power + correction);
     }
+
     //Same as DriveForward() but in reverse
-    public void DriveBackward()
+    public void DriveBackward() // key is "driveBackward"
     {
         robot.motor1.setPower(-power - correction);
         robot.motor2.setPower(-power + correction);
         robot.motor3.setPower(-power - correction);
         robot.motor4.setPower(-power + correction);
     }
-    public void StrafeLeft()
+
+    public void StrafeLeft() // key is "strafeLeft"
     {
         robot.motor1.setPower(-power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(power - correction);
         robot.motor4.setPower(-power + correction);
     }
-    public void StrafeRight()
+
+    public void StrafeRight() // key is "strafeRight"
     {
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(-power + correction);
         robot.motor3.setPower(-power - correction);
         robot.motor4.setPower(power + correction);
     }
-    public void TurnLeft()
+
+    public void TurnLeft() // key is "turnLeft"
     {
         robot.motor1.setPower(-power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(-power - correction);
         robot.motor4.setPower(power + correction);
     }
-    public void TurnRight()
+
+    public void TurnRight() // key is "turnRight"
     {
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(-power + correction);
         robot.motor3.setPower(power - correction);
         robot.motor4.setPower(-power + correction);
     }
+
     //Stops all 4 motors
-    public void StopDriving()
+    public void StopDriving() // key is "stopDriving"
     {
         robot.motor1.setPower(0);
         robot.motor2.setPower(0);
@@ -89,20 +223,91 @@ public class AndysOPMode extends LinearOpMode
         robot.motor4.setPower(0);
     }
 
+    public void EndOPMode() {
+        robot.motor1.setPower(0);
+        robot.motor2.setPower(0);
+        robot.motor3.setPower(0);
+        robot.motor4.setPower(0);
+        robot.motor5.setPower(0);
+        robot.motor6.setPower(0);
+        robot.motor7.setPower(0);
+    }
+
+    // instruction handler in the auton loop
+    public void InstructionHandler(long startTime) throws ConcurrentModificationException {
+        long elapsedTime = System.currentTimeMillis() - startTime;
+
+        ArrayList<MovingInstruction> deadMovingInstructions = new ArrayList<>();
+        ArrayList<MotorInstruction> deadMotorInstructions = new ArrayList<>();
+        ArrayList<ServoInstruction> deadServoInstructions = new ArrayList<>();
+
+
+        // iterate through the instructions of each list
+        for (MovingInstruction i : movingInstructions) {
+            i.Update(elapsedTime);
+            if (i.dead) {
+                deadMovingInstructions.add(i);
+            }
+        }
+        for (MotorInstruction i : motorInstructions) {
+            i.Update(elapsedTime);
+            if (i.dead) {
+                deadMotorInstructions.add(i);
+            }
+        }
+        for (ServoInstruction i : servoInstructions) {
+            i.Update(elapsedTime);
+            if (i.dead) {
+                deadServoInstructions.add(i);
+            }
+        }
+
+        // iterate through and remove dead instructions
+        for (MovingInstruction i : deadMovingInstructions) {
+            if (i.dead) {
+                movingInstructions.remove(i);
+            }
+        }
+        for (MotorInstruction i : deadMotorInstructions) {
+            if (i.dead) {
+                motorInstructions.remove(i);
+            }
+        }
+        for (ServoInstruction i : deadServoInstructions) {
+            i.Update(elapsedTime);
+            if (i.dead) {
+                servoInstructions.remove(i);
+            }
+        }
+    }
+
+    // easy methods to add instructions
+    public void AddDrivingInstruction(long startTime, long duration, int methodKey) {
+        movingInstructions.add(new MovingInstruction(startTime, duration, methodKey));
+    }
+
+    public void AddMotorInstruction(long startTime, double power, DcMotor motorID) { // update to add the motor's id
+        motorInstructions.add(new MotorInstruction(startTime, power, motorID));
+    }
+
+    public void AddServoInstruction(long startTime, double position, Servo servoID) { // update to add the servo's id
+        servoInstructions.add(new ServoInstruction(startTime, position, servoID));
+    }
+
+    // initialization ----------------------------------------------------------
     //This is what happens when the init button is pushed.
     @Override
-    public void runOpMode() throws InterruptedException
-    {
+    public void runOpMode() throws InterruptedException {
         // Initializes hardware when init is pressed on the phone
         robot.init(hardwareMap);
 
         //Makes new methods for naming simplification purposes
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
-        parameters.mode                = BNO055IMU.SensorMode.IMU;
-        parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled      = true;
+        parameters.mode = BNO055IMU.SensorMode.IMU;
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.loggingEnabled = true;
 
         // Retrieve and initialize the IMU. We expect the IMU to be attached to an I2C port
         // on a Core Device Interface Module, configured to be a sensor of type "AdaFruit IMU",
@@ -125,8 +330,7 @@ public class AndysOPMode extends LinearOpMode
         telemetry.update();
 
         // When the stop button isn't pushed and the gyro (IMU) isn't calibrated, wait (! means not). This is a loop.
-        while (!isStopRequested() && !robot.imu.isGyroCalibrated())
-        {
+        while (!isStopRequested() && !robot.imu.isGyroCalibrated()) {
             //do nothing for 50 milliseconds
             sleep(50);
             //idle(); allows the program to perform other necessary tasks in between iterations of the loop.
@@ -151,30 +355,52 @@ public class AndysOPMode extends LinearOpMode
         pidDrive.setInputRange(-90, 90);
         pidDrive.enable();
 
-        //captures System.currentTimeMillis and saves it as startTime. Subtract the later time from this time to get the change in time.
-        long startTime = System.currentTimeMillis();
-
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
 
-        // array instructions
-        int totalInstructions = 10;
-        ArrayList<String> instructions = new ArrayList<String>();
-        ArrayList<Integer> instructionTimes = new ArrayList<Integer>();
+        // instructions --------------------------------------------------------
+        // moving instructions
+        telemetry.addData("Adding Instructions", "Starting");
+        telemetry.update();
+        AddDrivingInstruction(1000, 500, strafeRight); //Strafe Right
+        AddDrivingInstruction(2000, 3750, driveForward); //DriveForward
+        AddDrivingInstruction(6250, 250, strafeRight); //Strafe Right
+        AddDrivingInstruction(10500, 400, strafeLeft); //Strafe Left
+        AddDrivingInstruction(12900, 400, strafeLeft); //Strafe Left
+        AddDrivingInstruction(15400, 500, driveForward); //DriveForward
+        telemetry.addData("Moving Instructions", "Success");
+        telemetry.update();
 
-        // add to insttuctions
-        instructions.add("drivef");
-        instructions.add("strafer");
+        // motor instructions
+        AddMotorInstruction(0, -0.5, robot.motor5); //Reverse Collector
+        AddMotorInstruction(500, 0, robot.motor5); //Turn Off Collector
+        AddMotorInstruction(6500, 0.55, robot.motor7); //Turn On Shooter
+        AddMotorInstruction(15400, 0, robot.motor7); //Turn Off Shooter
+        telemetry.addData("Motor Instructions", "Success");
+        telemetry.update();
 
-        // add times for above
-        instructionTimes.add(1000);
-        instructionTimes.add(2000);
+        // servo instructions
+        AddServoInstruction(8500, 1.2, robot.servo1);//Shoot
+        AddServoInstruction(9500, .5, robot.servo1);//Reset
+        AddServoInstruction(11400, 1.2, robot.servo1);//Shoot
+        AddServoInstruction(12400, .5, robot.servo1);//Reset
+        AddServoInstruction(13900, 1.2, robot.servo1);//Shoot
+        AddServoInstruction(14900, .5, robot.servo1);//Reset
+        telemetry.addData("Servo Instructions", "Success");
+        telemetry.update();
 
+        boolean started = false;
+        long startTime = 0;
 
+        // autonomous loop (when auton is started) -----------------------------
+        while (opModeIsActive()) {
 
-        while (opModeIsActive())
-        {
+            if (!started) {
+                started = true;
+                startTime = System.currentTimeMillis();
+            }
+
             // Use PID with imu input to drive in a straight line.
             //renames pidDrive.performPID(getAngle()) to correction for simple nomenclature.
             correction = pidDrive.performPID(getAngle());
@@ -186,100 +412,10 @@ public class AndysOPMode extends LinearOpMode
             telemetry.addData("4 turn rotation", rotation);
             telemetry.update();
 
-            //The series of instructions the robot will do.
-            //Reverse Collector
-            if(GetElapsedTime(startTime) > 0 && System.currentTimeMillis() - startTime < 500) {
-                robot.motor5.setPower(-0.5);
-            }
-            //Turn Off Collector
-            else if(System.currentTimeMillis() - startTime > 500 && System.currentTimeMillis() - startTime < 1000) {
-                robot.motor5.setPower(0);
-            }
-            //Strafe Right
-            else if(System.currentTimeMillis() - startTime > 1000 && System.currentTimeMillis() - startTime < 1500) {
-                StrafeRight();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 1500 && System.currentTimeMillis() - startTime < 2000) {
-                StopDriving();
-            }
-            //DriveForward
-            else if(System.currentTimeMillis() - startTime > 2000 && System.currentTimeMillis() - startTime < 6250) {
-                DriveForward();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 5750 && System.currentTimeMillis() - startTime < 6250) {
-                StopDriving();
-            }
-            //Strafe Right
-            else if(System.currentTimeMillis() - startTime > 6250 && System.currentTimeMillis() - startTime < 6500) {
-                StrafeRight();
-            }
-            //StopDriving
-            else if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 7000) {
-                StopDriving();
-            }
-            //Shoot
-            else if(System.currentTimeMillis() - startTime > 8500 && System.currentTimeMillis() - startTime < 9500) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(System.currentTimeMillis() - startTime > 9500 && System.currentTimeMillis() - startTime < 10500) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Strafe Left
-            else if(System.currentTimeMillis() - startTime > 10500 && System.currentTimeMillis() - startTime < 10900) {
-                StrafeLeft();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 10900 && System.currentTimeMillis() - startTime < 11400) {
-                StopDriving();
-            }
-            //Shoot
-            else if(System.currentTimeMillis() - startTime > 11400 && System.currentTimeMillis() - startTime < 12400) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(System.currentTimeMillis() - startTime > 12400 && System.currentTimeMillis() - startTime < 12900) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Strafe Left***
-            else if(System.currentTimeMillis() - startTime > 12900 && System.currentTimeMillis() - startTime < 13400) {
-                StrafeRight();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 13400 && System.currentTimeMillis() - startTime < 13900) {
-                StopDriving();
-            }
-            /*//Shoot
-            else if(System.currentTimeMillis() - startTime > 13900 && System.currentTimeMillis() - startTime < 14900) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(System.currentTimeMillis() - startTime > 14900 && System.currentTimeMillis() - startTime < 15400) {
-                robot.servo1.setPosition(0.5);
-            }*/
-            //Drive Forward
-            else if(System.currentTimeMillis() - startTime > 15400 && System.currentTimeMillis() - startTime < 15900) {
-                DriveForward();
-            }
-            //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 15900 && System.currentTimeMillis() - startTime < 30000) {
-                StopDriving();
-            }
-            //Turn on launcher
-            if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 15400) {
-                robot.motor7.setPower(.55);
-            }
-            //Turn Off Shooter
-            else if(System.currentTimeMillis() - startTime > 15400 && System.currentTimeMillis() - startTime < 16400) {
-                robot.motor7.setPower(0);
-            }
+            // update all instructions
+            InstructionHandler(startTime);
         }
-        //Turn the motors off (this will happen once when "While opModeIsActive" loop is finished).
-        StopDriving();
-        robot.motor5.setPower(0);
-        robot.motor7.setPower(0);
+        EndOPMode();
     }
 
     // Resets the cumulative angle tracking to zero.
@@ -291,8 +427,7 @@ public class AndysOPMode extends LinearOpMode
 
     //Get current cumulative angle rotation from last reset.
     //return Angle in degrees. + = left, - = right.
-    private double getAngle()
-    {
+    private double getAngle() {
         // We experimentally determined the Z axis is the axis we want to use for heading angle.
         // We have to process the angle because the imu works in euler angles so the Z axis is
         // returned as 0 to +180 or 0 to -180 rolling back to -179 or +179 when rotation passes
@@ -303,6 +438,7 @@ public class AndysOPMode extends LinearOpMode
         //The change (delta) angle is whatever the angle was first minus our current angle.
         //lastAngles is new Orientation() as declared near the beginning.
         double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
+
 
         //If the angle goes below -180, start subtracting the change in the angle (so -180 is the greatest change in the angle, -360 would be 0).
         //Returns a positive value (left) if the robot turns more than 180 deg right.
@@ -325,10 +461,10 @@ public class AndysOPMode extends LinearOpMode
 
     /**
      * Rotate left or right the number of degrees. Does not support turning more than 180 degrees.
+     *
      * @param degrees Degrees to turn, + is left - is right
      */
-    private void rotate(int degrees, double power)
-    {
+    private void rotate(int degrees, double power) {
         // restart imu angle tracking.
         resetAngle();
 
@@ -355,24 +491,19 @@ public class AndysOPMode extends LinearOpMode
 
         // rotate until turn is completed.
 
-        if (degrees < 0)
-        {
+        if (degrees < 0) {
             // On right turn we have to get off zero first.
-            while (opModeIsActive() && getAngle() == 0)
-            {
+            while (opModeIsActive() && getAngle() == 0) {
                 TurnRight();
                 sleep(100);
             }
 
-            do
-            {
+            do {
                 power = pidRotate.performPID(getAngle()); // power will be - on right turn.
                 TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
-        }
-        else    // left turn.
-            do
-            {
+        } else    // left turn.
+            do {
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
                 TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
