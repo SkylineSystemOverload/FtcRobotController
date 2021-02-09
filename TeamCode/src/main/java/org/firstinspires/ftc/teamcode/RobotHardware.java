@@ -44,17 +44,17 @@ public class RobotHardware {
     public void init(HardwareMap hardwareMap) {
 
         // DEFINE MOTORS AND SERVOS
-        motor1 = hardwareMap.get(DcMotor.class, "motor1");
-        motor2 = hardwareMap.get(DcMotor.class, "motor2");
-        motor3 = hardwareMap.get(DcMotor.class, "motor3");
-        motor4 = hardwareMap.get(DcMotor.class, "motor4");
-        motor5 = hardwareMap.get(DcMotor.class, "motor5");
-        motor6 = hardwareMap.get(DcMotor.class, "motor6");
-        motor7 = hardwareMap.get(DcMotor.class, "motor7");
+        motor1 = hardwareMap.get(DcMotor.class, "motor1"); // drive motor
+        motor2 = hardwareMap.get(DcMotor.class, "motor2"); // drive motor
+        motor3 = hardwareMap.get(DcMotor.class, "motor3"); // drive motor
+        motor4 = hardwareMap.get(DcMotor.class, "motor4"); // drive motor
+        motor5 = hardwareMap.get(DcMotor.class, "motor5"); // intake motor
+        motor6 = hardwareMap.get(DcMotor.class, "motor6"); // wobble arm motor
+        motor7 = hardwareMap.get(DcMotor.class, "motor7"); // launcher motor
         /*motor8 = hardwareMap.get(DcMotor.class, "motor8");*/
-        servo1 = hardwareMap.get(Servo.class, "servo1");
+        servo1 = hardwareMap.get(Servo.class, "servo1"); // shoot servo
         servo2 = hardwareMap.get(Servo.class, "servo2");
-        servo3 = hardwareMap.get(Servo.class, "servo3");
+        servo3 = hardwareMap.get(Servo.class, "servo3"); // intake clean up servo
         /*servo4 = hardwareMap.get(Servo.class, "servo4");
         servo5 = hardwareMap.get(Servo.class, "servo5");
         servo6 = hardwareMap.get(Servo.class, "servo6");

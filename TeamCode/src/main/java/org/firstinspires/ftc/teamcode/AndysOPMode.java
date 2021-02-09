@@ -38,14 +38,17 @@ public class AndysOPMode extends LinearOpMode {
     final int turnRight = 5;
 
     // op mode instruction classes --------------------------------------------
-    public class MovingInstruction {
+
+    // driving instructions calls the specified driving methods
+    public class DrivingInstruction {
         // private class variables
         private final long startTime;
         private final long stopTime;
         private boolean dead = false; // instruction handler checks if this is false, if false then instruction handler removes the instruction from the arraylist
         private final int method;
 
-        public MovingInstruction(long startTime, long duration, int methodKey) {
+        // initialization constructor
+        public DrivingInstruction(long startTime, long duration, int methodKey) {
             // stores start and end time
             // stores the instructions method key
             // has a method for updating
@@ -73,7 +76,7 @@ public class AndysOPMode extends LinearOpMode {
                         TurnLeft();
                     case turnRight :
                         TurnRight();
-                    default :
+                    default : // default in the off case someone enters the wrong key
                         StopDriving();
                 }
             }
@@ -85,6 +88,7 @@ public class AndysOPMode extends LinearOpMode {
         }
     }
 
+    // motor instructions interact with individual motors and sets their powers
     public static class MotorInstruction {
         // private class variable
         private final long startTime;
@@ -92,6 +96,7 @@ public class AndysOPMode extends LinearOpMode {
         private boolean dead = false;
         private final DcMotor motorID;
 
+        // initialization constructor
         public MotorInstruction(long startTime, double power, DcMotor motorID ) {
             // stores start and end time
             // stores the instructions method key
@@ -112,6 +117,7 @@ public class AndysOPMode extends LinearOpMode {
         }
     }
 
+    // servo instructions interact with individual servos and sets their positions
     public static class ServoInstruction {
         // private vars
         private final long startTime;
@@ -119,6 +125,7 @@ public class AndysOPMode extends LinearOpMode {
         private final double position;
         private final Servo servoID;
 
+        // initialization constructor
         public ServoInstruction(long startTime, double position, Servo servoID) {
             // stores start and end time
             // stores the instructions method key
@@ -145,7 +152,8 @@ public class AndysOPMode extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation lastAngles = new Orientation();
-    double globalAngle, power = .50, correction, rotation;
+    final double power = .5; // default power is never modified (used for the driving methods)
+    double globalAngle, correction, rotation;
     //static final double   COUNTS_PER_MOTOR_REV = 560 ;
     //static final double   MAX_ENCODER_TICKS_PER_MIN = (300 * COUNTS_PER_MOTOR_REV);
     //double Speed = ;
@@ -157,7 +165,7 @@ public class AndysOPMode extends LinearOpMode {
     // get start time to zero
 
     // arraylists that stores the instructions name and the time (milliseconds) for it to run
-    ArrayList<MovingInstruction> movingInstructions = new ArrayList<>();
+    ArrayList<DrivingInstruction> drivingInstructions = new ArrayList<>();
     ArrayList<MotorInstruction> motorInstructions = new ArrayList<>();
     ArrayList<ServoInstruction> servoInstructions = new ArrayList<>();
 
@@ -233,19 +241,18 @@ public class AndysOPMode extends LinearOpMode {
     }
 
     // instruction handler in the auton loop
-    public void InstructionHandler(long startTime) throws ConcurrentModificationException {
-        long elapsedTime = System.currentTimeMillis() - startTime;
+    public void InstructionHandler(long elapsedTime) throws ConcurrentModificationException {
 
-        ArrayList<MovingInstruction> deadMovingInstructions = new ArrayList<>();
+        ArrayList<DrivingInstruction> deadDrivingInstructions = new ArrayList<>();
         ArrayList<MotorInstruction> deadMotorInstructions = new ArrayList<>();
         ArrayList<ServoInstruction> deadServoInstructions = new ArrayList<>();
 
 
         // iterate through the instructions of each list
-        for (MovingInstruction i : movingInstructions) {
+        for (DrivingInstruction i : drivingInstructions) {
             i.Update(elapsedTime);
             if (i.dead) {
-                deadMovingInstructions.add(i);
+                deadDrivingInstructions.add(i);
             }
         }
         for (MotorInstruction i : motorInstructions) {
@@ -262,9 +269,9 @@ public class AndysOPMode extends LinearOpMode {
         }
 
         // iterate through and remove dead instructions
-        for (MovingInstruction i : deadMovingInstructions) {
+        for (DrivingInstruction i : deadDrivingInstructions) {
             if (i.dead) {
-                movingInstructions.remove(i);
+                drivingInstructions.remove(i);
             }
         }
         for (MotorInstruction i : deadMotorInstructions) {
@@ -282,15 +289,20 @@ public class AndysOPMode extends LinearOpMode {
 
     // easy methods to add instructions
     public void AddDrivingInstruction(long startTime, long duration, int methodKey) {
-        movingInstructions.add(new MovingInstruction(startTime, duration, methodKey));
+        drivingInstructions.add(new DrivingInstruction(startTime, duration, methodKey));
     }
 
-    public void AddMotorInstruction(long startTime, double power, DcMotor motorID) { // update to add the motor's id
+    public void AddMotorInstruction(long startTime, double power, DcMotor motorID) {
         motorInstructions.add(new MotorInstruction(startTime, power, motorID));
     }
 
-    public void AddServoInstruction(long startTime, double position, Servo servoID) { // update to add the servo's id
+    public void AddServoInstruction(long startTime, double position, Servo servoID) {
         servoInstructions.add(new ServoInstruction(startTime, position, servoID));
+    }
+
+    // get the total amount of instructions left
+    public int GetInstructionsAmount() {
+        return drivingInstructions.size() + motorInstructions.size() + servoInstructions.size();
     }
 
     // initialization ----------------------------------------------------------
@@ -346,8 +358,6 @@ public class AndysOPMode extends LinearOpMode {
         telemetry.addData("Mode", "running");
         telemetry.update();
 
-        sleep(1000);
-
         // Set up parameters for driving in a straight line.
         pidDrive.setSetpoint(0);
         pidDrive.setOutputRange(0, power);
@@ -359,7 +369,7 @@ public class AndysOPMode extends LinearOpMode {
         //the latter does not (this is just my guess).
 
         // instructions --------------------------------------------------------
-        // moving instructions
+        // driving instructions
         telemetry.addData("Adding Instructions", "Starting");
         telemetry.update();
         AddDrivingInstruction(1000, 500, strafeRight); //Strafe Right
@@ -368,7 +378,7 @@ public class AndysOPMode extends LinearOpMode {
         AddDrivingInstruction(10500, 400, strafeLeft); //Strafe Left
         AddDrivingInstruction(12900, 400, strafeLeft); //Strafe Left
         AddDrivingInstruction(15400, 500, driveForward); //DriveForward
-        telemetry.addData("Moving Instructions", "Success");
+        telemetry.addData("Driving Instructions", "Success");
         telemetry.update();
 
         // motor instructions
@@ -389,30 +399,38 @@ public class AndysOPMode extends LinearOpMode {
         telemetry.addData("Servo Instructions", "Success");
         telemetry.update();
 
+        // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;
         long startTime = 0;
+        long elapsedTime = 0;
 
         // autonomous loop (when auton is started) -----------------------------
-        while (opModeIsActive()) {
+        while (opModeIsActive() && GetInstructionsAmount() > 0) { // only run when opmodeisactive and auto ends the op mode when instructions run out
 
+            // simple switch that sets the time as soon as op mode is started (activates once at the beginning of loop)
             if (!started) {
                 started = true;
                 startTime = System.currentTimeMillis();
             }
 
+            elapsedTime = System.currentTimeMillis() - startTime;
+
             // Use PID with imu input to drive in a straight line.
             //renames pidDrive.performPID(getAngle()) to correction for simple nomenclature.
             correction = pidDrive.performPID(getAngle());
 
+            // update all instructions
+            InstructionHandler(elapsedTime);
+
             //Displays the realtime heading information on the phone.
+            telemetry.addData("Elapsed Time", elapsedTime);
+            telemetry.addData("Total Instructions Left", GetInstructionsAmount());
             telemetry.addData("1 imu heading", lastAngles.firstAngle);
             telemetry.addData("2 global heading", globalAngle);
             telemetry.addData("3 correction", correction);
             telemetry.addData("4 turn rotation", rotation);
             telemetry.update();
 
-            // update all instructions
-            InstructionHandler(startTime);
         }
         EndOPMode();
     }
