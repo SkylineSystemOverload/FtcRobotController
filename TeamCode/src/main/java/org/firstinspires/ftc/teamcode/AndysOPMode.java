@@ -26,8 +26,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 
 // op mode class ---------------------------------------------------------------
-@Autonomous(name = "NewOPMode", group = "Test")
-public class NewOPMode extends LinearOpMode {
+@Autonomous(name = "AndysOPMode", group = "Test")
+public class AndysOPMode extends LinearOpMode {
     // instruction keys --------------------------------------------------------
     // these keys make typing them into the add instruction methods easier to autocomplete
     final int driveForward = 0;
@@ -36,7 +36,6 @@ public class NewOPMode extends LinearOpMode {
     final int strafeRight = 3;
     final int turnLeft = 4;
     final int turnRight = 5;
-    final int stopDriving = 6;
 
     // op mode instruction classes --------------------------------------------
     public class MovingInstruction {
