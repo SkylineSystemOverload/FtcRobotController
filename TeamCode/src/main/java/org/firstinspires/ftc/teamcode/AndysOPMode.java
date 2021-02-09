@@ -369,15 +369,20 @@ public class AndysOPMode extends LinearOpMode {
         //the latter does not (this is just my guess).
 
         // instructions --------------------------------------------------------
-        // driving instructions
-        telemetry.addData("Adding Instructions", "Starting");
+        // update information on the driver station phone screen
+        telemetry.setAutoClear(false); // when telemetry.update() is called it clears the screen, this portion helps show if the instructions are loaded
+        telemetry.addData("Instructions", "Initializing");
         telemetry.update();
+
+        // driving instructions
         AddDrivingInstruction(1000, 500, strafeRight); //Strafe Right
         AddDrivingInstruction(2000, 3750, driveForward); //DriveForward
         AddDrivingInstruction(6250, 250, strafeRight); //Strafe Right
         AddDrivingInstruction(10500, 400, strafeLeft); //Strafe Left
         AddDrivingInstruction(12900, 400, strafeLeft); //Strafe Left
         AddDrivingInstruction(15400, 500, driveForward); //DriveForward
+
+        // update information on the driver station phone screen
         telemetry.addData("Driving Instructions", "Success");
         telemetry.update();
 
@@ -386,6 +391,8 @@ public class AndysOPMode extends LinearOpMode {
         AddMotorInstruction(500, 0, robot.motor5); //Turn Off Collector
         AddMotorInstruction(6500, 0.55, robot.motor7); //Turn On Shooter
         AddMotorInstruction(15400, 0, robot.motor7); //Turn Off Shooter
+
+        // update information on the driver station phone screen
         telemetry.addData("Motor Instructions", "Success");
         telemetry.update();
 
@@ -396,8 +403,12 @@ public class AndysOPMode extends LinearOpMode {
         AddServoInstruction(12400, .5, robot.servo1);//Reset
         AddServoInstruction(13900, 1.2, robot.servo1);//Shoot
         AddServoInstruction(14900, .5, robot.servo1);//Reset
+
+        // update information on the driver station phone screen
         telemetry.addData("Servo Instructions", "Success");
+        telemetry.addData("Mode", "Ready");
         telemetry.update();
+        telemetry.setAutoClear(true);
 
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;
@@ -425,10 +436,10 @@ public class AndysOPMode extends LinearOpMode {
             //Displays the realtime heading information on the phone.
             telemetry.addData("Elapsed Time", elapsedTime);
             telemetry.addData("Total Instructions Left", GetInstructionsAmount());
-            telemetry.addData("1 imu heading", lastAngles.firstAngle);
-            telemetry.addData("2 global heading", globalAngle);
-            telemetry.addData("3 correction", correction);
-            telemetry.addData("4 turn rotation", rotation);
+            telemetry.addData("Imu Heading", lastAngles.firstAngle);
+            telemetry.addData("Global Heading", globalAngle);
+            telemetry.addData("Correction", correction);
+            telemetry.addData("Turn Rotation", rotation);
             telemetry.update();
 
         }
