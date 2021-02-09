@@ -63,21 +63,23 @@ public class AndysOPMode extends LinearOpMode {
             // checks if the instruction can be done
             if (elapsedTime >= this.startTime && elapsedTime < this.stopTime) {
                 // do the method using switch case
-                switch (this.method) {
-                    case driveForward :
-                        DriveForward();
-                    case driveBackward :
-                        DriveBackward();
-                    case strafeLeft :
-                        StrafeLeft();
-                    case strafeRight :
-                        StrafeRight();
-                    case turnLeft :
-                        TurnLeft();
-                    case turnRight :
-                        TurnRight();
-                    default : // default in the off case someone enters the wrong key
-                        StopDriving();
+                if (this.method == driveForward) {
+                    DriveForward();
+                }
+                else if (this.method == driveBackward) {
+                    DriveBackward();
+                }
+                else if (this.method == strafeLeft) {
+                    StrafeLeft();
+                }
+                else if (this.method == strafeRight) {
+                    StrafeRight();
+                }
+                else if (this.method == turnLeft) {
+                    TurnLeft();
+                }
+                else if (this.method == turnRight) {
+                    TurnRight();
                 }
             }
             else if (elapsedTime > this.stopTime){
@@ -388,9 +390,6 @@ public class AndysOPMode extends LinearOpMode {
         telemetry.addData("imu calib status", robot.imu.getCalibrationStatus().toString());
         telemetry.update();
 
-        // The program will wait for the start button to continue.
-        waitForStart();
-
         telemetry.addData("Mode", "running");
         telemetry.update();
 
@@ -449,7 +448,10 @@ public class AndysOPMode extends LinearOpMode {
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;
         long startTime = 0;
-        long elapsedTime = 0;
+        long elapsedTime;
+
+        // The program will wait for the start button to continue.
+        waitForStart();
 
         // autonomous loop (when auton is started) -----------------------------
         while (opModeIsActive() && GetInstructionsAmount() > 0) { // only run when opmodeisactive and auto ends the op mode when instructions run out
