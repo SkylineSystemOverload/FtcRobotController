@@ -28,15 +28,25 @@ import java.util.ArrayList;
 // op mode class ---------------------------------------------------------------
 @Autonomous(name = "NewOPMode", group = "Test")
 public class NewOPMode extends LinearOpMode {
+    // instruction keys --------------------------------------------------------
+    // these keys make typing them into the add instruction methods easier to autocomplete
+    final int driveForward = 0;
+    final int driveBackward = 1;
+    final int strafeLeft = 2;
+    final int strafeRight = 3;
+    final int turnLeft = 4;
+    final int turnRight = 5;
+    final int stopDriving = 6;
+
     // op mode instruction classes --------------------------------------------
     public class MovingInstruction {
         // private class variables
         private final long startTime;
         private final long stopTime;
         private boolean dead = false; // instruction handler checks if this is false, if false then instruction handler removes the instruction from the arraylist
-        String method;
+        private final int method;
 
-        public MovingInstruction(long startTime, long duration, String methodKey) {
+        public MovingInstruction(long startTime, long duration, int methodKey) {
             // stores start and end time
             // stores the instructions method key
             // has a method for updating
@@ -52,17 +62,17 @@ public class NewOPMode extends LinearOpMode {
             if (elapsedTime >= this.startTime && elapsedTime < this.stopTime) {
                 // do the method using switch case
                 switch (this.method) {
-                    case "driveForward":
+                    case driveForward :
                         DriveForward();
-                    case "driveBackward":
+                    case driveBackward :
                         DriveBackward();
-                    case "strafeLeft" :
+                    case strafeLeft :
                         StrafeLeft();
-                    case "strafeRight" :
+                    case strafeRight :
                         StrafeRight();
-                    case "turnLeft" :
+                    case turnLeft :
                         TurnLeft();
-                    case "turnRight" :
+                    case turnRight :
                         TurnRight();
                     default :
                         StopDriving();
@@ -272,7 +282,7 @@ public class NewOPMode extends LinearOpMode {
     }
 
     // easy methods to add instructions
-    public void AddDrivingInstruction(long startTime, long duration, String methodKey) {
+    public void AddDrivingInstruction(long startTime, long duration, int methodKey) {
         movingInstructions.add(new MovingInstruction(startTime, duration, methodKey));
     }
 
@@ -353,12 +363,12 @@ public class NewOPMode extends LinearOpMode {
         // moving instructions
         telemetry.addData("Adding Instructions", "Starting");
         telemetry.update();
-        AddDrivingInstruction(1000, 500, "strafeRight"); //Strafe Right
-        AddDrivingInstruction(2000, 3750, "driveForward"); //DriveForward
-        AddDrivingInstruction(6250, 250, "strafeRight"); //Strafe Right
-        AddDrivingInstruction(10500, 400, "strafeLeft"); //Strafe Left
-        AddDrivingInstruction(12900, 400, "strafeLeft"); //Strafe Left
-        AddDrivingInstruction(15400, 500, "driveForward"); //DriveForward
+        AddDrivingInstruction(1000, 500, strafeRight); //Strafe Right
+        AddDrivingInstruction(2000, 3750, driveForward); //DriveForward
+        AddDrivingInstruction(6250, 250, strafeRight); //Strafe Right
+        AddDrivingInstruction(10500, 400, strafeLeft); //Strafe Left
+        AddDrivingInstruction(12900, 400, strafeLeft); //Strafe Left
+        AddDrivingInstruction(15400, 500, driveForward); //DriveForward
         telemetry.addData("Moving Instructions", "Success");
         telemetry.update();
 
