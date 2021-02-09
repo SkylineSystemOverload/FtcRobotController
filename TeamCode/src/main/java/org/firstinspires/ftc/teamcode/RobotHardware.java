@@ -88,14 +88,23 @@ public class RobotHardware {
 
         //SET MOTOR MODES
 
-        motor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); //...RunMode.RUN_TO_POSITION
-        motor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor3.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor4.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor5.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor6.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor7.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        /*motor8.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
+        /*motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor5.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor7.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor8.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);*/
+
+        motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //...RunMode.RUN_TO_POSITION
+        motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor4.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor6.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor7.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        /*motor8.setMode(DcMotor.RunMode.RUN_USING_ENCODER);*/
 
         //SET MOTOR zeroPowerBehavior
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); //...ZeroPowerBehavior.FLOAT
