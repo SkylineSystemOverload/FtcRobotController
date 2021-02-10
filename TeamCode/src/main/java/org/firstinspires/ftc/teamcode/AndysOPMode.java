@@ -432,11 +432,11 @@ public class AndysOPMode extends LinearOpMode {
         telemetry.update();
 
         // servo instructions
-        AddServoInstruction(8500, 1.2, robot.servo1);//Shoot
+        AddServoInstruction(8500, 1, robot.servo1);//Shoot
         AddServoInstruction(9500, .5, robot.servo1);//Reset
-        AddServoInstruction(11400, 1.2, robot.servo1);//Shoot
+        AddServoInstruction(11400, 1, robot.servo1);//Shoot
         AddServoInstruction(12400, .5, robot.servo1);//Reset
-        AddServoInstruction(13900, 1.2, robot.servo1);//Shoot
+        AddServoInstruction(13900, 1, robot.servo1);//Shoot
         AddServoInstruction(14900, .5, robot.servo1);//Reset
 
         // update information on the driver station phone screen
