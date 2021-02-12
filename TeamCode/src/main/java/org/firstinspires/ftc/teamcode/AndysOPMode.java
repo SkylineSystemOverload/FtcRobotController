@@ -104,29 +104,58 @@ public class AndysOPMode extends LinearOpMode {
     // turning instructions calls the specific turning instructions
     public class TurningInstruction extends DrivingInstruction {
         // private vars
-        private final long angle;
+        private long angle;
 
         // initialization constructor
-        public TurningInstruction(int delay, long angle, int methodKey) {
-            super(delay, 0, methodKey);
+        public TurningInstruction(int delay, long angle) {
+            super(delay, 0, 0);
             this.angle = angle;
         }
 
         // called in the instruction handler
         @Override
         public void Perform() {
-            if(this.method == turnLeft) {
-                TurnLeft(this.angle);
+            // restart imu angle tracking.
+            resetAngle();
+
+            // if degrees > 359 we cap at 359 with same sign as original degrees.
+            if (Math.abs(this.angle) > 359) {
+                this.angle = (int) Math.copySign(359, this.angle);
             }
-            else if(this.method == turnRight) {
-                TurnRight(this.angle);
-            }
+
+            /* start pid controller. PID controller will monitor the turn angle with respect to the
+             target angle and reduce power as we approach the target angle. This is to prevent the
+             robots momentum from overshooting the turn after we turn off the power. The PID controller
+             reports onTarget() = true when the difference between turn angle and target angle is within
+             1% of target (tolerance) which is about 1 degree. This helps prevent overshoot. Overshoot is
+             dependant on the motor and gearing configuration, starting power, weight of the robot and the
+             on target tolerance. If the controller overshoots, it will reverse the sign of the output
+             turning the robot back toward the setpoint value. */
+
+            pidRotate.reset();
+            pidRotate.setSetpoint(this.angle);
+            pidRotate.setInputRange(0, this.angle);
+            pidRotate.setOutputRange(0, power);
+            pidRotate.setTolerance(1);
+            pidRotate.enable();
+
         }
 
-        // check if we have reached the correct angle
+        // check if we have reached the correct angle (where we decide if the instruction is dead)
         @Override
         public void Check() {
-
+            if (this.angle > 0 && getAngle() < this.angle) { // left turn
+                double power = pidDrive.performPID(getAngle());
+                TurnLeft(power);
+            }
+            else if (this.angle < 0 && (getAngle() > this.angle || getAngle() == 0)) { // right turn
+                double power = pidDrive.performPID(getAngle());
+                TurnRight(power);
+            }
+            else {
+                StopDriving();
+                this.dead = true;
+            }
         }
     }
 
@@ -190,7 +219,6 @@ public class AndysOPMode extends LinearOpMode {
     final int WHEEL_DIAM = 4;
     final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
     final double TICKS_PER_INCHES = TICKS_PER_REVOLUTION / INCHES_PER_REVOLUTION;
-    final long VELOCITY = TICKS_PER_REVOLUTION;
     final double power = .5; // default power is never modified (used for the driving methods)
     final double speed = .5;
     double globalAngle, correction, rotation;
@@ -321,7 +349,7 @@ public class AndysOPMode extends LinearOpMode {
         SetModeAndSpeedForDrivers();
     }
 
-    public void TurnLeft(long angle) // key is "turnLeft"
+    public void TurnLeft(double power) // key is "turnLeft"
     {
         robot.motor1.setPower(-power - correction);
         robot.motor2.setPower(power + correction);
@@ -329,7 +357,7 @@ public class AndysOPMode extends LinearOpMode {
         robot.motor4.setPower(power + correction);
     }
 
-    public void TurnRight(long angle) // key is "turnRight"
+    public void TurnRight(double power) // key is "turnRight"
     {
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(-power + correction);
@@ -338,7 +366,7 @@ public class AndysOPMode extends LinearOpMode {
     }
 
     //Stops all 4 motors
-    public void StopDriving(int distance) // key is "stopDriving"
+    public void StopDriving() // key is "stopDriving"
     {
         robot.motor1.setPower(0);
         robot.motor2.setPower(0);
@@ -373,7 +401,7 @@ public class AndysOPMode extends LinearOpMode {
                 drivingInstructions.get(0).Check();
                 if (drivingInstructions.get(0).dead) {
                     drivingInstructions.remove(0);
-                    drivingDelay = System.currentTimeMillis();
+                    drivingDelay = elapsedTime;
                 }
             }
         }
@@ -395,6 +423,13 @@ public class AndysOPMode extends LinearOpMode {
     // easy methods to add instructions
     public void AddDrivingInstruction(int delay, long distance, int methodKey) {
         drivingInstructions.add(new DrivingInstruction(delay, distance, methodKey));
+    }
+
+    public void AddTurningInstruction(int delay, long angle, int methodKey) {
+        if (methodKey == turnRight) {
+            angle *= -1;
+        }
+        drivingInstructions.add(new TurningInstruction(delay, angle));
     }
 
     public void AddMotorInstruction(long startTime, double power, DcMotor motorID) {
@@ -481,14 +516,12 @@ public class AndysOPMode extends LinearOpMode {
         telemetry.update();
 
         // driving instructions
-        /*
-        AddDrivingInstruction(1000, 500, strafeRight); //Strafe Right
-        AddDrivingInstruction(2000, 3750, driveForward); //DriveForward
-        AddDrivingInstruction(6250, 250, strafeRight); //Strafe Right
-        AddDrivingInstruction(10500, 400, strafeLeft); //Strafe Left
-        AddDrivingInstruction(12900, 400, strafeLeft); //Strafe Left
-        AddDrivingInstruction(15400, 500, driveForward); //DriveForward */
-        AddDrivingInstruction(500, 10, strafeLeft);
+        AddDrivingInstruction(500, 12, driveForward);
+        AddDrivingInstruction(500, 12, driveBackward);
+        AddDrivingInstruction(500, 12, strafeLeft);
+        AddDrivingInstruction(500, 12, strafeRight);
+        AddTurningInstruction(500, 90, turnLeft);
+        AddTurningInstruction(500, 180, turnRight);
 
         // update information on the driver station phone screen
         telemetry.addData("Driving Instructions", "Success");
@@ -605,11 +638,10 @@ public class AndysOPMode extends LinearOpMode {
     }
 
 
-    /**
+    /*/**
      * Rotate left or right the number of degrees. Does not support turning more than 180 degrees.
      *
      * @param degrees Degrees to turn, + is left - is right
-     */
     private void rotate(int degrees, double power) {
         // restart imu angle tracking.
         resetAngle();
@@ -636,23 +668,23 @@ public class AndysOPMode extends LinearOpMode {
         // getAngle() returns + when rotating counter clockwise (left) and - when rotating clockwise (right).
 
         // rotate until turn is completed.
-
-        if (degrees < 0) {
+        if (degrees < 0) { // right turn
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0) {
-                TurnRight(0);
+                TurnRight();
                 sleep(100);
             }
 
             do {
                 power = pidRotate.performPID(getAngle()); // power will be - on right turn.
-                TurnLeft(0);
+                TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
         } else    // left turn.
             do {
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
-                TurnLeft(0);
+                TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
+
 
         // turn the motors off.
         StopDriving(0);
@@ -664,5 +696,5 @@ public class AndysOPMode extends LinearOpMode {
 
         // reset angle tracking on new heading.
         resetAngle();
-    }
+    }*/
 }
