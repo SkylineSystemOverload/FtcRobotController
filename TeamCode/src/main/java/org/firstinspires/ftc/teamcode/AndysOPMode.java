@@ -9,7 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.InstantiableUserConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -38,64 +40,100 @@ public class AndysOPMode extends LinearOpMode {
     final int turnRight = 5;
 
     // op mode instruction classes --------------------------------------------
+    private class Instruction {
+        public final long startTime;
+        public boolean dead = false;
+
+        // simple constructor to
+        public Instruction(long startTime) {
+            this.startTime = startTime;
+        }
+
+        // place holder method that is overriden in by the inherited classes
+        public void Perform() {
+
+        }
+    }
 
     // driving instructions calls the specified driving methods
-    public class DrivingInstruction {
+    public class DrivingInstruction extends Instruction {
         // private class variables
-        private final long startTime;
-        private final long stopTime;
-        private boolean dead = false; // instruction handler checks if this is false, if false then instruction handler removes the instruction from the arraylist
-        private final int method;
+        private int distance;
+        private final int delay;
+        protected final int method;
+        private boolean started = false;
 
         // initialization constructor
-        public DrivingInstruction(long startTime, long duration, int methodKey) {
+        public DrivingInstruction(int delay, float distance, int methodKey) {
             // stores start and end time
             // stores the instructions method key
             // has a method for updating
             // stores a boolean that tells if the instruction is now useless (when the instruction is done)
-            this.startTime = startTime;
-            this.stopTime = this.startTime + duration;
+            super(0);
+            this.delay = delay;
             this.method = methodKey;
+            // convert inches to ticks
+            this.distance = (int)Math.round(distance * TICKS_PER_INCHES); // cast to int since distance needs to be type int
         }
 
         // called in the instruction handler
-        public void Update(long elapsedTime) {
-            // checks if the instruction can be done
-            if (elapsedTime >= this.startTime && elapsedTime < this.stopTime) {
-                // do the method using switch case
-                if (this.method == driveForward) {
-                    DriveForward();
-                }
-                else if (this.method == driveBackward) {
-                    DriveBackward();
-                }
-                else if (this.method == strafeLeft) {
-                    StrafeLeft();
-                }
-                else if (this.method == strafeRight) {
-                    StrafeRight();
-                }
-                else if (this.method == turnLeft) {
-                    TurnLeft();
-                }
-                else if (this.method == turnRight) {
-                    TurnRight();
-                }
+        @Override
+        public void Perform() {
+            // do the method using switch case
+            if (this.method == driveForward) {
+                DriveForward(this.distance);
             }
-            else if (elapsedTime > this.stopTime){
-                // declare instruction dead
-                this.dead = true;
-                StopDriving();
+            else if (this.method == driveBackward) {
+                DriveBackward(this.distance);
             }
+            else if (this.method == strafeLeft) {
+                StrafeLeft(this.distance);
+            }
+            else if (this.method == strafeRight) {
+                StrafeRight(this.distance);
+            }
+        }
+
+        // check if the motors are still busy
+        public void Check() {
+            // compare current with target
+            this.dead = !robot.motor1.isBusy();
+        }
+    }
+
+    // turning instructions calls the specific turning instructions
+    public class TurningInstruction extends DrivingInstruction {
+        // private vars
+        private final long angle;
+
+        // initialization constructor
+        public TurningInstruction(int delay, long angle, int methodKey) {
+            super(delay, 0, methodKey);
+            this.angle = angle;
+        }
+
+        // called in the instruction handler
+        @Override
+        public void Perform() {
+            if(this.method == turnLeft) {
+                TurnLeft(this.angle);
+            }
+            else if(this.method == turnRight) {
+                TurnRight(this.angle);
+            }
+        }
+
+        // check if we have reached the correct angle
+        @Override
+        public void Check() {
+
         }
     }
 
     // motor instructions interact with individual motors and sets their powers
-    public static class MotorInstruction {
+    public class MotorInstruction extends Instruction {
         // private class variable
-        private final long startTime;
         private final double power;
-        private boolean dead = false;
         private final DcMotor motorID;
 
         // initialization constructor
@@ -104,26 +142,22 @@ public class AndysOPMode extends LinearOpMode {
             // stores the instructions method key
             // has a method for updating
             // stores a boolean that tells if the instruction is now useless (when the instruction is done)
-            this.startTime = startTime;
+            super(startTime);
             this.power = power;
             this.motorID = motorID;
         }
         // called in the instruction handler
-        public void Update(long elapsedTime) {
-            // checks if the instruction can be done
-            if (elapsedTime >= this.startTime) {
-                // set the motor power
-                this.motorID.setPower(this.power);
-                this.dead = true;
-            }
+        @Override
+        public void Perform() {
+            // set the motor power
+            this.motorID.setPower(this.power);
+            this.dead = true;
         }
     }
 
     // servo instructions interact with individual servos and sets their positions
-    public static class ServoInstruction {
+    public class ServoInstruction extends Instruction {
         // private vars
-        private final long startTime;
-        private boolean dead = false;
         private final double position;
         private final Servo servoID;
 
@@ -133,28 +167,32 @@ public class AndysOPMode extends LinearOpMode {
             // stores the instructions method key
             // has a method for updating
             // stores a boolean that tells if the instruction is now useless (when the instruction is done)
-            this.startTime = startTime;
+            super(startTime);
             this.position = position;
             this.servoID = servoID;
         }
         // called in the instruction handler
-        public void Update(long elapsedTime) {
-            // checks if the instruction can be done
-            if (elapsedTime >= this.startTime) {
-                // set the servo's position
-                this.servoID.setPosition(this.position);
-                this.dead = true;
-            }
+        @Override
+        public void Perform() {
+            // set the servo's position
+            this.servoID.setPosition(this.position);
+            this.dead = true;
         }
     }
 
     // op mode global vars -----------------------------------------------------
     //Calls the RobotHardware class
-    RobotHardware robot = new RobotHardware();
+    AndysRobotHardware robot = new AndysRobotHardware();
 
     BNO055IMU imu;
     Orientation lastAngles = new Orientation();
+    final int TICKS_PER_REVOLUTION = 1120;
+    final int WHEEL_DIAM = 4;
+    final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
+    final double TICKS_PER_INCHES = TICKS_PER_REVOLUTION / INCHES_PER_REVOLUTION;
+    final long VELOCITY = TICKS_PER_REVOLUTION;
     final double power = .5; // default power is never modified (used for the driving methods)
+    final double speed = .5;
     double globalAngle, correction, rotation;
     //static final double   COUNTS_PER_MOTOR_REV = 560 ;
     //static final double   MAX_ENCODER_TICKS_PER_MIN = (300 * COUNTS_PER_MOTOR_REV);
@@ -168,14 +206,33 @@ public class AndysOPMode extends LinearOpMode {
     // get start time to zero
 
     // arraylists that stores the instructions name and the time (milliseconds) for it to run
+    ArrayList<Instruction> instructions = new ArrayList<>();
     ArrayList<DrivingInstruction> drivingInstructions = new ArrayList<>();
-    ArrayList<MotorInstruction> motorInstructions = new ArrayList<>();
-    ArrayList<ServoInstruction> servoInstructions = new ArrayList<>();
+    private long drivingDelay = 0;
 
     // movement methods --------------------------------------------------------
     //Declares some methods to compress and reduce tediousness of writing repetitive code.
     //Every time the method DriveForward() is called,  it will do the instructions within the method
-    public void DriveForward() // key is "driveForward"
+    private void ResetDriverEncoders() {
+        robot.motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.motor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+
+    private void SetModeAndSpeedForDrivers() {
+        robot.motor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.motor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.motor3.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.motor4.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        robot.motor1.setPower(speed);
+        robot.motor2.setPower(speed);
+        robot.motor3.setPower(speed);
+        robot.motor4.setPower(speed);
+    }
+
+    public void DriveForward(int distance) // key is "driveForward"
     {
         /*//This is set up so that the motors' speed ramps up and ramps down while driving
         //Most of this probably shouldn't go in the DriveForward() method but I don't know where to put it.
@@ -212,46 +269,67 @@ public class AndysOPMode extends LinearOpMode {
         robot.motor3.setPower(newPower - correction);
         robot.motor4.setPower(newPower + correction);*/
 
-        robot.motor1.setPower(power - correction);
-        robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(power + correction);
+        ResetDriverEncoders();
+
+        // now set the new target and set their velocities
+        robot.motor1.setTargetPosition(distance);
+        robot.motor2.setTargetPosition(distance);
+        robot.motor3.setTargetPosition(distance);
+        robot.motor4.setTargetPosition(distance);
+
+        SetModeAndSpeedForDrivers();
     }
 
     //Same as DriveForward() but in reverse
-    public void DriveBackward() // key is "driveBackward"
+    public void DriveBackward(int distance) // key is "driveBackward"
     {
-        robot.motor1.setPower(-power - correction);
-        robot.motor2.setPower(-power + correction);
-        robot.motor3.setPower(-power - correction);
-        robot.motor4.setPower(-power + correction);
+        ResetDriverEncoders();
+
+        // now set the new target and set their velocities
+        robot.motor1.setTargetPosition(-distance);
+        robot.motor2.setTargetPosition(-distance);
+        robot.motor3.setTargetPosition(-distance);
+        robot.motor4.setTargetPosition(-distance);
+
+        SetModeAndSpeedForDrivers();
     }
 
-    public void StrafeLeft() // key is "strafeLeft"
+    public void StrafeLeft(int distance) // key is "strafeLeft"
+    {
+        // WORKS YAYADON T OTHER THINSG LIFKE THIS
+        ResetDriverEncoders();
+
+        // now set the new target and set their velocities
+        robot.motor1.setTargetPosition(-distance);
+        robot.motor2.setTargetPosition(distance);
+        robot.motor3.setTargetPosition(distance);
+        robot.motor4.setTargetPosition(-distance);
+
+        SetModeAndSpeedForDrivers();
+    }
+
+    public void StrafeRight( int distance) // key is "strafeRight"
+    {
+        ResetDriverEncoders();
+
+        // now set the new target and set their velocities
+        robot.motor1.setTargetPosition(distance);
+        robot.motor2.setTargetPosition(-distance);
+        robot.motor3.setTargetPosition(-distance);
+        robot.motor4.setTargetPosition(distance);
+
+        SetModeAndSpeedForDrivers();
+    }
+
+    public void TurnLeft(long angle) // key is "turnLeft"
     {
         robot.motor1.setPower(-power - correction);
         robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(-power + correction);
-    }
-
-    public void StrafeRight() // key is "strafeRight"
-    {
-        robot.motor1.setPower(power - correction);
-        robot.motor2.setPower(-power + correction);
         robot.motor3.setPower(-power - correction);
         robot.motor4.setPower(power + correction);
     }
 
-    public void TurnLeft() // key is "turnLeft"
-    {
-        robot.motor1.setPower(-power - correction);
-        robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(-power - correction);
-        robot.motor4.setPower(power + correction);
-    }
-
-    public void TurnRight() // key is "turnRight"
+    public void TurnRight(long angle) // key is "turnRight"
     {
         robot.motor1.setPower(power - correction);
         robot.motor2.setPower(-power + correction);
@@ -260,7 +338,7 @@ public class AndysOPMode extends LinearOpMode {
     }
 
     //Stops all 4 motors
-    public void StopDriving() // key is "stopDriving"
+    public void StopDriving(int distance) // key is "stopDriving"
     {
         robot.motor1.setPower(0);
         robot.motor2.setPower(0);
@@ -281,66 +359,59 @@ public class AndysOPMode extends LinearOpMode {
     // instruction handler in the auton loop
     public void InstructionHandler(long elapsedTime) throws ConcurrentModificationException {
 
-        ArrayList<DrivingInstruction> deadDrivingInstructions = new ArrayList<>();
-        ArrayList<MotorInstruction> deadMotorInstructions = new ArrayList<>();
-        ArrayList<ServoInstruction> deadServoInstructions = new ArrayList<>();
+        ArrayList<Instruction> deadInstructions = new ArrayList<>();
 
+        // sequentially perform the instructions
+        if (drivingInstructions.size() > 0) {
+            // perform the first instruction
+            if (elapsedTime >= drivingDelay + drivingInstructions.get(0).delay && !drivingInstructions.get(0).started) {
+                drivingInstructions.get(0).Perform();
+                drivingInstructions.get(0).started = true;
+            }
+            // continually check if the distance has been met
+            else if (elapsedTime >= drivingInstructions.get(0).startTime) {
+                drivingInstructions.get(0).Check();
+                if (drivingInstructions.get(0).dead) {
+                    drivingInstructions.remove(0);
+                    drivingDelay = System.currentTimeMillis();
+                }
+            }
+        }
 
         // iterate through the instructions of each list
-        for (DrivingInstruction i : drivingInstructions) {
-            i.Update(elapsedTime);
-            if (i.dead) {
-                deadDrivingInstructions.add(i);
-            }
-        }
-        for (MotorInstruction i : motorInstructions) {
-            i.Update(elapsedTime);
-            if (i.dead) {
-                deadMotorInstructions.add(i);
-            }
-        }
-        for (ServoInstruction i : servoInstructions) {
-            i.Update(elapsedTime);
-            if (i.dead) {
-                deadServoInstructions.add(i);
+        for (Instruction i: instructions) {
+            if (elapsedTime >= i.startTime) {
+                i.Perform();
+                deadInstructions.add(i);
             }
         }
 
         // iterate through and remove dead instructions
-        for (DrivingInstruction i : deadDrivingInstructions) {
-            if (i.dead) {
-                drivingInstructions.remove(i);
-            }
-        }
-        for (MotorInstruction i : deadMotorInstructions) {
-            if (i.dead) {
-                motorInstructions.remove(i);
-            }
-        }
-        for (ServoInstruction i : deadServoInstructions) {
-            i.Update(elapsedTime);
-            if (i.dead) {
-                servoInstructions.remove(i);
-            }
+        for (Instruction i: deadInstructions) {
+            instructions.remove(i);
         }
     }
 
     // easy methods to add instructions
-    public void AddDrivingInstruction(long startTime, long duration, int methodKey) {
-        drivingInstructions.add(new DrivingInstruction(startTime, duration, methodKey));
+    public void AddDrivingInstruction(int delay, long distance, int methodKey) {
+        drivingInstructions.add(new DrivingInstruction(delay, distance, methodKey));
     }
 
     public void AddMotorInstruction(long startTime, double power, DcMotor motorID) {
-        motorInstructions.add(new MotorInstruction(startTime, power, motorID));
+        instructions.add(new MotorInstruction(startTime, power, motorID));
     }
 
     public void AddServoInstruction(long startTime, double position, Servo servoID) {
-        servoInstructions.add(new ServoInstruction(startTime, position, servoID));
+        instructions.add(new ServoInstruction(startTime, position, servoID));
     }
 
     // get the total amount of instructions left
     public int GetInstructionsAmount() {
-        return drivingInstructions.size() + motorInstructions.size() + servoInstructions.size();
+        return instructions.size();
+    }
+
+    public int GetDrivingInstructionsAmount() {
+        return drivingInstructions.size();
     }
 
     // initialization ----------------------------------------------------------
@@ -410,12 +481,14 @@ public class AndysOPMode extends LinearOpMode {
         telemetry.update();
 
         // driving instructions
+        /*
         AddDrivingInstruction(1000, 500, strafeRight); //Strafe Right
         AddDrivingInstruction(2000, 3750, driveForward); //DriveForward
         AddDrivingInstruction(6250, 250, strafeRight); //Strafe Right
         AddDrivingInstruction(10500, 400, strafeLeft); //Strafe Left
         AddDrivingInstruction(12900, 400, strafeLeft); //Strafe Left
-        AddDrivingInstruction(15400, 500, driveForward); //DriveForward
+        AddDrivingInstruction(15400, 500, driveForward); //DriveForward */
+        AddDrivingInstruction(500, 10, strafeLeft);
 
         // update information on the driver station phone screen
         telemetry.addData("Driving Instructions", "Success");
@@ -472,12 +545,19 @@ public class AndysOPMode extends LinearOpMode {
             InstructionHandler(elapsedTime);
 
             //Displays the realtime heading information on the phone.
+            /*
             telemetry.addData("Elapsed Time", elapsedTime);
             telemetry.addData("Total Instructions Left", GetInstructionsAmount());
             telemetry.addData("Imu Heading", lastAngles.firstAngle);
             telemetry.addData("Global Heading", globalAngle);
             telemetry.addData("Correction", correction);
-            telemetry.addData("Turn Rotation", rotation);
+            telemetry.addData("Turn Rotation", rotation);*/
+
+            telemetry.addData("Instructions", GetDrivingInstructionsAmount() + GetInstructionsAmount());
+            telemetry.addData("Encoder 1", robot.motor1.getCurrentPosition());
+            telemetry.addData("Encoder 2", robot.motor2.getCurrentPosition());
+            telemetry.addData("Encoder 3", robot.motor3.getCurrentPosition());
+            telemetry.addData("Encoder 4", robot.motor4.getCurrentPosition());
             telemetry.update();
 
         }
@@ -505,9 +585,6 @@ public class AndysOPMode extends LinearOpMode {
         //lastAngles is new Orientation() as declared near the beginning.
         double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
 
-        // update information on the driver station phone screen
-        telemetry.addData("Driving Instructions", "Success");
-        telemetry.update();
 
         //If the angle goes below -180, start subtracting the change in the angle (so -180 is the greatest change in the angle, -360 would be 0).
         //Returns a positive value (left) if the robot turns more than 180 deg right.
@@ -563,22 +640,22 @@ public class AndysOPMode extends LinearOpMode {
         if (degrees < 0) {
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0) {
-                TurnRight();
+                TurnRight(0);
                 sleep(100);
             }
 
             do {
                 power = pidRotate.performPID(getAngle()); // power will be - on right turn.
-                TurnLeft();
+                TurnLeft(0);
             } while (opModeIsActive() && !pidRotate.onTarget());
         } else    // left turn.
             do {
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
-                TurnLeft();
+                TurnLeft(0);
             } while (opModeIsActive() && !pidRotate.onTarget());
 
         // turn the motors off.
-        StopDriving();
+        StopDriving(0);
 
         rotation = getAngle();
 

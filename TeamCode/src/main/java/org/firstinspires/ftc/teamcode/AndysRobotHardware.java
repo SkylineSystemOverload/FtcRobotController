@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -9,12 +10,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
-public class RobotHardware {
+public class AndysRobotHardware {
     //  INSTANTIATE MOTORS AND SERVOS
-    public DcMotor motor1;
-    public DcMotor motor2;
-    public DcMotor motor3;
-    public DcMotor motor4;
+    public DcMotorEx motor1;
+    public DcMotorEx motor2;
+    public DcMotorEx motor3;
+    public DcMotorEx motor4;
     public DcMotor motor5;
     public DcMotor motor6;
     public DcMotor motor7;
@@ -44,17 +45,17 @@ public class RobotHardware {
     public void init(HardwareMap hardwareMap) {
 
         // DEFINE MOTORS AND SERVOS
-        motor1 = hardwareMap.get(DcMotor.class, "motor1");
-        motor2 = hardwareMap.get(DcMotor.class, "motor2");
-        motor3 = hardwareMap.get(DcMotor.class, "motor3");
-        motor4 = hardwareMap.get(DcMotor.class, "motor4");
-        motor5 = hardwareMap.get(DcMotor.class, "motor5");
-        motor6 = hardwareMap.get(DcMotor.class, "motor6");
-        motor7 = hardwareMap.get(DcMotor.class, "motor7");
+        motor1 = hardwareMap.get(DcMotorEx.class, "motor1"); // drive motor
+        motor2 = hardwareMap.get(DcMotorEx.class, "motor2"); // drive motor
+        motor3 = hardwareMap.get(DcMotorEx.class, "motor3"); // drive motor
+        motor4 = hardwareMap.get(DcMotorEx.class, "motor4"); // drive motor
+        motor5 = hardwareMap.get(DcMotor.class, "motor5"); // intake motor
+        motor6 = hardwareMap.get(DcMotor.class, "motor6"); // wobble arm motor
+        motor7 = hardwareMap.get(DcMotor.class, "motor7"); // launcher motor
         /*motor8 = hardwareMap.get(DcMotor.class, "motor8");*/
-        servo1 = hardwareMap.get(Servo.class, "servo1");
+        servo1 = hardwareMap.get(Servo.class, "servo1"); // shoot servo
         servo2 = hardwareMap.get(Servo.class, "servo2");
-        servo3 = hardwareMap.get(Servo.class, "servo3");
+        servo3 = hardwareMap.get(Servo.class, "servo3"); // intake clean up servo
         /*servo4 = hardwareMap.get(Servo.class, "servo4");
         servo5 = hardwareMap.get(Servo.class, "servo5");
         servo6 = hardwareMap.get(Servo.class, "servo6");
@@ -88,6 +89,15 @@ public class RobotHardware {
 
         //SET MOTOR MODES
 
+        /*motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor5.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor7.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor8.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);*/
+
         motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //...RunMode.RUN_TO_POSITION
         motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -95,7 +105,7 @@ public class RobotHardware {
         motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor6.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor7.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        /*motor8.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
+        /*motor8.setMode(DcMotor.RunMode.RUN_USING_ENCODER);*/
 
         //SET MOTOR zeroPowerBehavior
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); //...ZeroPowerBehavior.FLOAT
