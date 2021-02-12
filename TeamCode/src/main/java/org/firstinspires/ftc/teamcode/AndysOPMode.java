@@ -154,6 +154,8 @@ public class AndysOPMode extends LinearOpMode {
             }
             else {
                 StopDriving();
+                rotation = getAngle();
+                resetAngle();
                 this.dead = true;
             }
         }
