@@ -13,21 +13,28 @@ import com.qualcomm.robotcore.util.Range;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name="DriverControlled", group="Test")
-
-public class DriverControlled extends OpMode{
+@Disabled
+@TeleOp(name="AndyDriverControlled", group="Test")
+public class AndyDriverControlled extends OpMode{
 
     // DEFINE robot
-    RobotHardware robot = new RobotHardware();
+    AndysRobotHardware robot = new AndysRobotHardware();
 
-    //variables
+    // VARIABLEs
     // driving variables to ensure smooth transition to moving from parked
     boolean moving = false;
     boolean driving = false;
     boolean parked = false;
     long driveStartTime = 0;
 
+    // wobble arm boolean vars
+    boolean goingDown = false;
+    boolean goingUp = false;
+    final int travelDistance = 0;
+
     // CONSTANTS
+
+
 
     // RUN ONCE ON init()
     @Override
@@ -66,11 +73,6 @@ public class DriverControlled extends OpMode{
         boolean G1rightBumper = gamepad1.right_bumper;
         boolean G1leftBumper = gamepad1.left_bumper;
 
-        // wobble arm boolean vars
-        boolean goingDown = false;
-        boolean goingUp = false;
-        final int travelDistance = 0;
-
         // check if we start moving
         if ((0 < Math.abs(G1leftStickY) || 0 < Math.abs(G1leftStickX) || 0 < Math.abs(G1rightStickX))) {
             if (!moving) {
@@ -83,11 +85,6 @@ public class DriverControlled extends OpMode{
 
         }
 
-        //mecanum drive
-        /*robot.motor1.setPower((G1leftStickY) + (G1leftStickX) + (G1rightStickX));
-        robot.motor3.setPower((G1leftStickY) - (G1leftStickX) + (G1rightStickX));
-        robot.motor2.setPower((G1leftStickY) - (G1leftStickX) - (G1rightStickX));
-        robot.motor4.setPower((G1leftStickY) + (G1leftStickX) - (G1rightStickX));*/
         //mecanum drive
         robot.motor1.setPower(((G1leftStickY) + (G1leftStickX) + (G1rightStickX)) * MultiplierFunction(driveStartTime));
         robot.motor3.setPower(((G1leftStickY) - (G1leftStickX) + (G1rightStickX)) * MultiplierFunction(driveStartTime));
@@ -106,12 +103,12 @@ public class DriverControlled extends OpMode{
         }
 
         // launcher statements
-        if(G1RT>0 && G1RT<.75) { // rev launcher
-        robot.motor7.setPower(.5);
+        if(G1RT>0) { // rev launcher
+        robot.motor7.setPower(0.1);
         }
-        else if (G1RT > .75) {
-            robot.motor7.setPower(G1RT);
-        }
+        /*else if(G1rightBumper) { // slower launcher
+            robot.motor7.setPower(.25);
+        }*/
         else { // stop launcher
             robot.motor7.setPower(0);
         }
@@ -122,8 +119,8 @@ public class DriverControlled extends OpMode{
             robot.servo3.setPosition(1.2);
         }
 
-        else { // reset shooting and intake clean up servo
-            robot.servo1.setPosition(0.5);
+            else { // reset shooting and intake clean up servo
+                robot.servo1.setPosition(0.5);
             robot.servo3.setPosition(0.275);
         }
 
@@ -137,22 +134,17 @@ public class DriverControlled extends OpMode{
         else { // stop wobble arm
             robot.motor6.setPower(0);
         }
-        if(G1leftBumper) { // open finger
-            robot.servo4.setPosition(0);
-        }
-        else if (G1rightBumper) {
-            robot.servo4.setPosition(1);
-        }
 
+        telemetry.addData("drive multiplier", MultiplierFunction(driveStartTime));
+        telemetry.addData("elapsed driving time", System.currentTimeMillis() - driveStartTime);
         telemetry.addData("motor1 Power", robot.motor1.getPower());
         telemetry.addData("motor2 Power", robot.motor2.getPower());
         telemetry.addData("motor3 Power", robot.motor3.getPower());
         telemetry.addData("motor4 Power", robot.motor4.getPower());
         telemetry.addData("motor5 Power", robot.motor5.getPower());
-        telemetry.addData("motor6 Power", robot.motor6.getPower());
+        telemetry.addData("motor5 Power", robot.motor6.getPower());
+        telemetry.addData("motor5 Power", robot.motor6.getCurrentPosition());
         telemetry.addData("motor7 Power", robot.motor7.getPower());
-        telemetry.addData("right bumper", G1rightBumper);
-        telemetry.addData("left bumper", G1leftBumper);
     }
 
     // RUN ONCE ON stop()

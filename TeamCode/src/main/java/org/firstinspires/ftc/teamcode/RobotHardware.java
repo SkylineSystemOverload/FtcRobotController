@@ -22,8 +22,8 @@ public class RobotHardware {
     public Servo servo1;
     public Servo servo2;
     public Servo servo3;
-    /*public Servo servo4;
-    public Servo servo5;
+    public Servo servo4;
+    /*public Servo servo5;
     public Servo servo6;
     public Servo servo7;
     public Servo servo8;
@@ -55,8 +55,8 @@ public class RobotHardware {
         servo1 = hardwareMap.get(Servo.class, "servo1");
         servo2 = hardwareMap.get(Servo.class, "servo2");
         servo3 = hardwareMap.get(Servo.class, "servo3");
-        /*servo4 = hardwareMap.get(Servo.class, "servo4");
-        servo5 = hardwareMap.get(Servo.class, "servo5");
+        servo4 = hardwareMap.get(Servo.class, "servo4");
+        /*servo5 = hardwareMap.get(Servo.class, "servo5");
         servo6 = hardwareMap.get(Servo.class, "servo6");
         servo7 = hardwareMap.get(Servo.class, "servo7");
         servo8 = hardwareMap.get(Servo.class, "servo8");
@@ -88,13 +88,22 @@ public class RobotHardware {
 
         //SET MOTOR MODES
 
+        motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor5.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //motor7.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        /*motor8.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);*/
+
         motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //...RunMode.RUN_TO_POSITION
         motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor4.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor6.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor7.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor7.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         /*motor8.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
 
         //SET MOTOR zeroPowerBehavior
@@ -117,6 +126,7 @@ public class RobotHardware {
         servo1.setPosition(.5);
         servo2.setPosition(-.1);
         servo3.setPosition(0.275);
+        servo4.setPosition(0);
 
         //CALIBRATE SENSORS
         //gyroSensor.calibrate();
