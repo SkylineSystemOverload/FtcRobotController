@@ -28,7 +28,7 @@ public class AutonomousInstructions {
     ArrayList<SequentialInstruction> seqInstructions = new ArrayList<>();
     ArrayList<TimerInstruction> timerInstructions = new ArrayList<>();
 
-    // instructions --------------------------------------------------------------------------------
+    // base instructions ---------------------------------------------------------------------------
     // base instruction class for sequential instructions
     private class SequentialInstruction {
         // private variables for the sequential instructions
@@ -61,6 +61,31 @@ public class AutonomousInstructions {
         }
     }
 
+    // base instruction class for timer based instructions
+    private class TimerInstruction {
+        // private variables for the
+        protected final long startTime;
+        protected boolean dead = false;
+
+        /*
+        initialization constructor
+         */
+        public TimerInstruction(long startTime) {this.startTime = startTime; }
+
+        /*
+        method for performing the timer instruction
+            since this is the base class and inheritors will have different actions, this method is a placeholder
+         */
+        public void Perform(long currentTime) {}
+
+        /*
+        method for updating the instruction if the instruction needs to be continuously performed
+            since this is the base class and inheritors will have different actions, this method is a placeholder
+         */
+        public void Check() {}
+    }
+
+    // sequential instructions ---------------------------------------------------------------------
     // sequential motor power instruction, doesn't need to a check method
     private class SequentialMotorPowerInstruction extends SequentialInstruction {
         // private variables used
@@ -286,30 +311,10 @@ public class AutonomousInstructions {
         }
     }
 
-    // base instruction class for timer based instructions
-    private class TimerInstruction {
-        // private variables for the
-        protected final long startTime;
-        protected boolean dead = false;
+    // timer instructions --------------------------------------------------------------------------
 
-        /*
-        initialization constructor
-         */
-        public TimerInstruction(long startTime) {this.startTime = startTime; }
 
-        /*
-        method for performing the timer instruction
-            since this is the base class and inheritors will have different actions, this method is a placeholder
-         */
-        public void Perform(long currentTime) {}
-
-        /*
-        method for updating the instruction if the instruction needs to be continuously performed
-            since this is the base class and inheritors will have different actions, this method is a placeholder
-         */
-        public void Check() {}
-    }
-
+    // called in op mode methods -------------------------------------------------------------------
     // called inside the autonomous program's while loop
     public void HandleInstructions(long elapsedTime, double correction) {
         // handle all sequential instructions

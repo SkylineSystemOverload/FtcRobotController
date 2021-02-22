@@ -32,14 +32,6 @@ import java.util.ArrayList;
 // op mode class ---------------------------------------------------------------
 @Autonomous(name = "Test", group = "Test")
 public class TestBlue extends LinearOpMode {
-    // instruction keys --------------------------------------------------------
-    // these keys make typing them into the add instruction methods easier to autocomplete
-    final int driveForward = 0;
-    final int driveBackward = 1;
-    final int strafeLeft = 2;
-    final int strafeRight = 3;
-    final int turnLeft = 4;
-    final int turnRight = 5;
 
     // op mode global vars -----------------------------------------------------
     //Calls the RobotHardware class
@@ -48,7 +40,6 @@ public class TestBlue extends LinearOpMode {
     BNO055IMU imu;
     Orientation lastAngles = new Orientation();
     final double power = .5; // default power is never modified (used for the driving methods)
-    final double speed = .5;
     double globalAngle, correction, rotation;
     private ElapsedTime     runtime = new ElapsedTime();
 
@@ -58,112 +49,7 @@ public class TestBlue extends LinearOpMode {
     // instatiates the autonomous instruction handler class
     AutonomousInstructions Instructions = new AutonomousInstructions();
 
-    // auton instruction vars --------------------------------------------------
-    // get start time to zero
-
-
-    // movement methods --------------------------------------------------------
-    //Declares some methods to compress and reduce tediousness of writing repetitive code.
-    //Every time the method DriveForward() is called,  it will do the instructions within the method
-    private void ResetDriverEncoders() {
-        robot.motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.motor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
-
-    private void SetModeAndSpeedForDrivers() {
-        robot.motor1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        robot.motor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        robot.motor3.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        robot.motor4.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        robot.motor1.setPower(speed);
-        robot.motor2.setPower(speed);
-        robot.motor3.setPower(speed);
-        robot.motor4.setPower(speed);
-    }
-
-    public void DriveForward(int distance) // key is "driveForward"
-    {
-
-        ResetDriverEncoders();
-
-        // now set the new target and set their velocities
-        robot.motor1.setTargetPosition(distance);
-        robot.motor2.setTargetPosition(distance);
-        robot.motor3.setTargetPosition(distance);
-        robot.motor4.setTargetPosition(distance);
-
-        SetModeAndSpeedForDrivers();
-    }
-
-    //Same as DriveForward() but in reverse
-    public void DriveBackward(int distance) // key is "driveBackward"
-    {
-        ResetDriverEncoders();
-
-        // now set the new target and set their velocities
-        robot.motor1.setTargetPosition(-distance);
-        robot.motor2.setTargetPosition(-distance);
-        robot.motor3.setTargetPosition(-distance);
-        robot.motor4.setTargetPosition(-distance);
-
-        SetModeAndSpeedForDrivers();
-    }
-
-    public void StrafeLeft(int distance) // key is "strafeLeft"
-    {
-        // WORKS YAYADON T OTHER THINSG LIFKE THIS
-        ResetDriverEncoders();
-
-        // now set the new target and set their velocities
-        robot.motor1.setTargetPosition(-distance);
-        robot.motor2.setTargetPosition(distance);
-        robot.motor3.setTargetPosition(distance);
-        robot.motor4.setTargetPosition(-distance);
-
-        SetModeAndSpeedForDrivers();
-    }
-
-    public void StrafeRight( int distance) // key is "strafeRight"
-    {
-        ResetDriverEncoders();
-
-        // now set the new target and set their velocities
-        robot.motor1.setTargetPosition(distance);
-        robot.motor2.setTargetPosition(-distance);
-        robot.motor3.setTargetPosition(-distance);
-        robot.motor4.setTargetPosition(distance);
-
-        SetModeAndSpeedForDrivers();
-    }
-
-    public void TurnLeft(double power) // key is "turnLeft"
-    {
-        robot.motor1.setPower(-power - correction);
-        robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(-power - correction);
-        robot.motor4.setPower(power + correction);
-    }
-
-    public void TurnRight(double power) // key is "turnRight"
-    {
-        robot.motor1.setPower(power - correction);
-        robot.motor2.setPower(-power + correction);
-        robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(-power + correction);
-    }
-
-    //Stops all 4 motors
-    public void StopDriving() // key is "stopDriving"
-    {
-        robot.motor1.setPower(0);
-        robot.motor2.setPower(0);
-        robot.motor3.setPower(0);
-        robot.motor4.setPower(0);
-    }
-
+    // used to end the whole op mode
     public void EndOPMode() {
         robot.motor1.setPower(0);
         robot.motor2.setPower(0);
