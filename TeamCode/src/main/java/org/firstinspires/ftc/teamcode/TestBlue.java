@@ -20,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -40,244 +41,12 @@ public class TestBlue extends LinearOpMode {
     final int turnLeft = 4;
     final int turnRight = 5;
 
-    // op mode instruction classes --------------------------------------------
-    private class Instruction {
-        public final long startTime;
-        public boolean dead = false;
-
-        // simple constructor to
-        public Instruction(long startTime) {
-            this.startTime = startTime;
-        }
-
-        // place holder method that is overriden in by the inherited classes
-        public void Perform() {
-
-        }
-    }
-
-    // driving instructions calls the specified driving methods
-    public class DrivingInstruction extends Instruction {
-        // private class variables
-        public int distance;
-        public final int delay;
-        public final int method;
-        public boolean started = false;
-
-        // initialization constructor
-        public DrivingInstruction(int delay, double distance, int methodKey) {
-            // stores start and end time
-            // stores the instructions method key
-            // has a method for updating
-            // stores a boolean that tells if the instruction is now useless (when the instruction is done)
-            super(0);
-            this.delay = delay;
-            this.method = methodKey;
-            // convert inches to ticks
-            this.distance = (int)Math.round(distance * TICKS_PER_INCHES); // cast to int since distance needs to be type int
-        }
-
-        // called in the instruction handler
-        @Override
-        public void Perform() {
-            // do the method using switch case
-            if (this.method == driveForward) {
-                DriveForward(this.distance);
-            }
-            else if (this.method == driveBackward) {
-                DriveBackward(this.distance);
-            }
-            else if (this.method == strafeLeft) {
-                this.distance *= 1.2;
-                StrafeLeft(this.distance);
-            }
-            else if (this.method == strafeRight) {
-                this.distance *= 1.2;
-                StrafeRight(this.distance);
-            }
-        }
-
-        // check if the motors are still busy
-        public void Check() {
-            // compare current with target
-            if (robot.motor1.isBusy() && robot.motor2.isBusy() && robot.motor3.isBusy() && robot.motor4.isBusy()) this.dead = true;
-        }
-    }
-
-    // turning instructions calls the specific turning instructions
-    public class TurningInstruction extends DrivingInstruction {
-        // private vars
-        private long angle;
-
-        // initialization constructor
-        public TurningInstruction(int delay, long angle) {
-            super(delay, 0, 0);
-            this.angle = angle;
-        }
-
-        // called in the instruction handler
-        @Override
-        public void Perform() {
-            // restart imu angle tracking.
-            resetAngle();
-
-            // if degrees > 359 we cap at 359 with same sign as original degrees.
-            if (Math.abs(this.angle) > 359) {
-                this.angle = (int) Math.copySign(359, this.angle);
-            }
-
-            /* start pid controller. PID controller will monitor the turn angle with respect to the
-             target angle and reduce power as we approach the target angle. This is to prevent the
-             robots momentum from overshooting the turn after we turn off the power. The PID controller
-             reports onTarget() = true when the difference between turn angle and target angle is within
-             1% of target (tolerance) which is about 1 degree. This helps prevent overshoot. Overshoot is
-             dependant on the motor and gearing configuration, starting power, weight of the robot and the
-             on target tolerance. If the controller overshoots, it will reverse the sign of the output
-             turning the robot back toward the setpoint value. */
-
-            pidRotate.reset();
-            pidRotate.setSetpoint(this.angle);
-            pidRotate.setInputRange(0, this.angle);
-            pidRotate.setOutputRange(0, power);
-            pidRotate.setTolerance(1);
-            pidRotate.enable();
-
-        }
-
-        // check if we have reached the correct angle (where we decide if the instruction is dead)
-        @Override
-        public void Check() {
-            if (this.angle > 0 && getAngle() < this.angle) { // left turn
-                double power = pidDrive.performPID(getAngle());
-                TurnLeft(power);
-            }
-            else if (this.angle < 0 && (getAngle() > this.angle || getAngle() == 0)) { // right turn
-                double power = pidDrive.performPID(getAngle());
-                TurnRight(power);
-            }
-            else {
-                StopDriving();
-                rotation = getAngle();
-                resetAngle();
-                this.dead = true;
-            }
-        }
-    }
-
-    // sequential motor instruction used in the driving instruction list
-    public class SeqMotorInstruction extends DrivingInstruction {
-        // private class variables
-        private final double power;
-        private final DcMotor motorID;
-
-        // initialization constructor
-        public SeqMotorInstruction(int delay, double power, DcMotor motorID) {
-            super(delay, 0, 0); // place holders
-            this.power = power;
-            this.motorID = motorID;
-        }
-
-        // called in the instruction handler
-        @Override
-        public void Perform() {
-            // set the motor power
-            this.motorID.setPower(this.power);
-        }
-
-        // override place holder
-        @Override
-        public void Check() {
-            this.dead = true;
-        }
-    }
-
-    // sequential motor instruction used in the driving instruction list
-    public class SeqServoInstruction extends DrivingInstruction {
-        // private class variables
-        private final double position;
-        private final Servo servoID;
-
-        // initialization constructor
-        public SeqServoInstruction(int delay, double position, Servo servoID) {
-            super(delay, 0, 0); // place holders
-            this.position = position;
-            this.servoID = servoID;
-        }
-
-        // called in the instruction handler
-        @Override
-        public void Perform() {
-            // set the motor power
-            this.servoID.setPosition(this.position);
-        }
-
-        // override place holder
-        @Override
-        public void Check() {
-            this.dead = true;
-        }
-    }
-
-    // motor instructions interact with individual motors and sets their powers
-    public class MotorInstruction extends Instruction {
-        // private class variable
-        private final double power;
-        private final DcMotor motorID;
-
-        // initialization constructor
-        public MotorInstruction(long startTime, double power, DcMotor motorID ) {
-            // stores start and end time
-            // stores the instructions method key
-            // has a method for updating
-            // stores a boolean that tells if the instruction is now useless (when the instruction is done)
-            super(startTime);
-            this.power = power;
-            this.motorID = motorID;
-        }
-        // called in the instruction handler
-        @Override
-        public void Perform() {
-            // set the motor power
-            this.motorID.setPower(this.power);
-            this.dead = true;
-        }
-    }
-
-    // servo instructions interact with individual servos and sets their positions
-    public class ServoInstruction extends Instruction {
-        // private vars
-        private final double position;
-        private final Servo servoID;
-
-        // initialization constructor
-        public ServoInstruction(long startTime, double position, Servo servoID) {
-            // stores start and end time
-            // stores the instructions method key
-            // has a method for updating
-            // stores a boolean that tells if the instruction is now useless (when the instruction is done)
-            super(startTime);
-            this.position = position;
-            this.servoID = servoID;
-        }
-        // called in the instruction handler
-        @Override
-        public void Perform() {
-            // set the servo's position
-            this.servoID.setPosition(this.position);
-            this.dead = true;
-        }
-    }
-
     // op mode global vars -----------------------------------------------------
     //Calls the RobotHardware class
     AndysRobotHardware robot = new AndysRobotHardware();
 
     BNO055IMU imu;
     Orientation lastAngles = new Orientation();
-    final int TICKS_PER_REVOLUTION = 1120;
-    final int WHEEL_DIAM = 4;
-    final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
-    final double TICKS_PER_INCHES = TICKS_PER_REVOLUTION / INCHES_PER_REVOLUTION;
     final double power = .5; // default power is never modified (used for the driving methods)
     final double speed = .5;
     double globalAngle, correction, rotation;
@@ -292,10 +61,6 @@ public class TestBlue extends LinearOpMode {
     // auton instruction vars --------------------------------------------------
     // get start time to zero
 
-    // arraylists that stores the instructions name and the time (milliseconds) for it to run
-    ArrayList<Instruction> instructions = new ArrayList<>();
-    ArrayList<DrivingInstruction> drivingInstructions = new ArrayList<>();
-    private long drivingDelay = 0;
 
     // movement methods --------------------------------------------------------
     //Declares some methods to compress and reduce tediousness of writing repetitive code.
@@ -409,83 +174,6 @@ public class TestBlue extends LinearOpMode {
         robot.motor7.setPower(0);
     }
 
-    // instruction handler in the auton loop
-    public void InstructionHandler(long elapsedTime) throws ConcurrentModificationException {
-
-        ArrayList<Instruction> deadInstructions = new ArrayList<>();
-
-        // sequentially perform the instructions
-        if (drivingInstructions.size() > 0) {
-            // perform the first instruction
-            if (elapsedTime >= (drivingDelay + drivingInstructions.get(0).delay) && !drivingInstructions.get(0).started) {
-                drivingInstructions.get(0).Perform();
-                drivingInstructions.get(0).started = true;
-            }
-            // continually check if the distance has been met
-            else if (elapsedTime >= drivingInstructions.get(0).startTime && drivingInstructions.get(0).started && !drivingInstructions.get(0).dead) {
-                drivingInstructions.get(0).Check();
-                if (drivingInstructions.get(0).dead) {
-                    drivingInstructions.remove(0);
-                    drivingDelay = elapsedTime;
-                }
-            }
-        }
-
-        // iterate through the instructions of each list
-        for (Instruction i: instructions) {
-            if (elapsedTime >= i.startTime) {
-                i.Perform();
-                deadInstructions.add(i);
-            }
-        }
-
-        // iterate through and remove dead instructions
-        for (Instruction i: deadInstructions) {
-            instructions.remove(i);
-        }
-    }
-
-    // easy methods to add instructions
-    public void AddDrivingInstruction(int delay, double distance, int methodKey) {
-        drivingInstructions.add(new DrivingInstruction(delay, distance, methodKey));
-    }
-
-    public void AddTurningInstruction(int delay, long angle, int methodKey) {
-        if (methodKey == turnRight) {
-            angle *= -1;
-        }
-        drivingInstructions.add(new TurningInstruction(delay, angle));
-    }
-
-    public void AddSeqMotorInstruction(int delay, double power, DcMotor motorID) {
-        drivingInstructions.add(new SeqMotorInstruction(delay, power, motorID));
-    }
-
-    public void AddSeqServoInstruction(int delay, double position, Servo servoID) {
-        drivingInstructions.add(new SeqServoInstruction(delay, position, servoID));
-    }
-
-    public void AddMotorInstruction(long startTime, double power, DcMotor motorID) {
-        instructions.add(new MotorInstruction(startTime, power, motorID));
-    }
-
-    public void AddServoInstruction(long startTime, double position, Servo servoID) {
-        instructions.add(new ServoInstruction(startTime, position, servoID));
-    }
-
-    // get the total amount of timer based instructions left
-    public int GetInstructionsAmount() {
-        return instructions.size();
-    }
-
-    // get the total amount of sequential based instructions left
-    public int GetDrivingInstructionsAmount() {
-        return drivingInstructions.size();
-    }
-
-    // get the total amount of instructions total all of them yes
-    public int GetAllInstructions() {return GetInstructionsAmount() + GetDrivingInstructionsAmount(); }
-
     // initialization ----------------------------------------------------------
     //This is what happens when the init button is pushed.
     @Override
@@ -552,11 +240,10 @@ public class TestBlue extends LinearOpMode {
         telemetry.addData("Instructions", "Initializing");
         telemetry.update();
 
+        ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
+
         // sequential instructions
-        Instructions.AddSeqMotorDistanceInstruction(100, robot.motor1, 10, false);
-        Instructions.AddSeqMotorDistanceInstruction(0, robot.motor2, 10, false);
-        Instructions.AddSeqMotorDistanceInstruction(0, robot.motor3, 10, false);
-        Instructions.AddSeqMotorDistanceInstruction(0, robot.motor4, 10, false);
+        Instructions.AddSeqDrivingInstruction(100, driveMotors, 12, Instructions.driveForward);
 
         // update information on the driver station phone screen
         telemetry.addData("Loaded Instructions", "Success");
@@ -573,7 +260,7 @@ public class TestBlue extends LinearOpMode {
         waitForStart();
 
         // autonomous loop (when auton is started) -----------------------------
-        while (opModeIsActive() && GetAllInstructions() > 0) { // only run when opmodeisactive and auto ends the op mode when instructions run out
+        while (opModeIsActive() && Instructions.StillRunning()) { // only run when opmodeisactive and auto ends the op mode when instructions run out
 
             // simple switch that sets the time as soon as op mode is started (activates once at the beginning of loop)
             if (!started) {
@@ -588,7 +275,7 @@ public class TestBlue extends LinearOpMode {
             correction = pidDrive.performPID(getAngle());
 
             // update all instructions
-            Instructions.HandleInstructions(elapsedTime);
+            Instructions.HandleInstructions(elapsedTime, correction);
 
             //Displays the realtime heading information on the phone.
             /*
@@ -600,7 +287,7 @@ public class TestBlue extends LinearOpMode {
             telemetry.addData("Turn Rotation", rotation);*/
 
             telemetry.addData("Elapsed Time", elapsedTime);
-            telemetry.addData("Instructions", GetDrivingInstructionsAmount() + GetInstructionsAmount());
+            telemetry.addData("Instructions", Instructions.InstructionLeft());
             telemetry.addData("Encoder 1", robot.motor1.getCurrentPosition());
             telemetry.addData("Encoder 2", robot.motor2.getCurrentPosition());
             telemetry.addData("Encoder 3", robot.motor3.getCurrentPosition());
