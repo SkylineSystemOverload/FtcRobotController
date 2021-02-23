@@ -46,7 +46,7 @@ public class TestBlue extends LinearOpMode {
     //Calls the PIDHardware class
     PIDHardware pidRotate, pidDrive;
 
-    // instatiates the autonomous instruction handler class
+    // instantiates the autonomous instruction handler class
     AutonomousInstructions Instructions = new AutonomousInstructions();
 
     // used to end the whole op mode

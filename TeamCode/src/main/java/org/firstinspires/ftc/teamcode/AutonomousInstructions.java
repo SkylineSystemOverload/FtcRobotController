@@ -295,9 +295,10 @@ public class AutonomousInstructions {
             if (this.method == turnLeft || this.method == turnRight) { // turning
 
             }
-            else {
+            else { // not turning
                 // check if dead first
-                for (DcMotor motor: this.driveMotors) { // not turning
+                this.dead = true;
+                for (DcMotor motor: this.driveMotors) {
                     if (motor.isBusy()) {
                         this.dead = false;
                     }
@@ -328,6 +329,20 @@ public class AutonomousInstructions {
                     this.driveMotors.get(2).setPower((speed - correction) * this.speedMultiplier);
                     this.driveMotors.get(3).setPower((speed + correction) * this.speedMultiplier);
                 }
+            }
+            if (this.dead) {
+                this.OnDeath();
+            }
+        }
+
+        /*
+        on death method
+            kills all motors when done driving
+         */
+        private void OnDeath() {
+            // iterate through drive motors to stop and reset encoders
+            for (DcMotor motor: this.driveMotors) {
+                motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             }
         }
 
