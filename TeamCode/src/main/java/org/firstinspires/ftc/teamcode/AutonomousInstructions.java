@@ -34,7 +34,7 @@ public class AutonomousInstructions {
 
     // base instructions ---------------------------------------------------------------------------
     // base instruction class for sequential instructions
-    private class SequentialInstruction {
+    private static class SequentialInstruction {
         // private variables for the sequential instructions
         protected final long delay;
         protected boolean dead = false;
@@ -66,7 +66,7 @@ public class AutonomousInstructions {
     }
 
     // base instruction class for timer based instructions
-    private class TimerInstruction {
+    private static class TimerInstruction {
         // private variables for the
         protected final long startTime;
         protected boolean dead = false;
@@ -213,17 +213,22 @@ public class AutonomousInstructions {
         private final int method;
 
         // used for speeding up and slowing down
-        private double speedMultiplier = 0;
-        private long driveStartTime = 0;
-        private long slowStartTime = 0;
-        private final int inchesTillSlowDown = 2;
+        private double speedMultiplier;
+        private long driveStartTime;
+        private long slowStartTime;
+        private final int inchesTillSlowDown = 5;
         private boolean slowingDown = false;
         private final double distanceThreshold;
 
-        // constants used for speeding up and slowing down
         private final double millisToSpeedUp = 1000;
         private final double millisToSlowDown = 1000;
         private final double base = .1;
+        private ArrayList<Integer> currentTicks;
+        private ArrayList<Integer> targetTicks;
+
+        // used for correction
+        private boolean correcting = false;
+        private final double correctingSpeed = .5;
 
         /*
         initialization constructor
@@ -231,6 +236,9 @@ public class AutonomousInstructions {
         public SequentialDrivingInstruction(long delay, ArrayList<DcMotor> driveMotors, double inches, int methodKey) {
             super(delay);
             this.driveMotors = driveMotors;
+            if (methodKey == strafeLeft || methodKey == strafeRight) {
+                inches *= 1.25;
+            }
             this.distance = (int)Math.round(inches * TICKS_PER_INCHES);
             this.method = methodKey;
             this.drive = true;
@@ -323,11 +331,45 @@ public class AutonomousInstructions {
                     // adjust the multiplier
                     this.AdjustMultiplier();
 
-                    // add the correction correctly
-                    this.driveMotors.get(0).setPower((speed - correction) * this.speedMultiplier);
-                    this.driveMotors.get(1).setPower((speed + correction) * this.speedMultiplier);
-                    this.driveMotors.get(2).setPower((speed - correction) * this.speedMultiplier);
-                    this.driveMotors.get(3).setPower((speed + correction) * this.speedMultiplier);
+                    // TEST
+                    // correcting
+                    if (Math.abs(correction) > 0 && !this.correcting) {
+                        for (DcMotor motor: this.driveMotors) {
+                            // collect all current ticks
+                            this.currentTicks.add(motor.getCurrentPosition());
+                            this.targetTicks.add(motor.getTargetPosition());
+
+                            // reset encoder
+                            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+                            // set motors to run to 0
+                            motor.setTargetPosition(0);
+
+                            // set motors to go to that position
+                            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                            // set speed
+                            motor.setPower(this.correctingSpeed);
+                            }
+                    }
+                    // finished corrected
+                    else if (correction == 0 && this.correcting) {
+                        for (int i = 0; i < this.driveMotors.size(); i++) {
+                            // set motor's new target position to the difference between set distance and the distance traveled
+                            this.driveMotors.get(0).setTargetPosition(this.targetTicks.get(0) - this.currentTicks.get(0));
+
+                            // set the speed
+                            this.driveMotors.get(0).setPower(speed);
+                        }
+                    }
+                    // regular driving
+                    else {
+                        // add the correction correctly (correction is negative when robot veers left)
+                        this.driveMotors.get(0).setPower(speed * this.speedMultiplier);
+                        this.driveMotors.get(1).setPower(speed * this.speedMultiplier);
+                        this.driveMotors.get(2).setPower(speed * this.speedMultiplier);
+                        this.driveMotors.get(3).setPower(speed * this.speedMultiplier);
+                    }
                 }
             }
             if (this.dead) {
@@ -393,8 +435,10 @@ public class AutonomousInstructions {
                     ((elapsedTime-x1) * (elapsedTime-x3)) / ((x2-x1) * (x2-x3)) * y2 +
                     ((elapsedTime-x1) * (elapsedTime-x2)) / ((x3-x1) * (x3-x2)) * y3;
         }
+
         private double SpeedUp() {
             // define the three points
+            // constants used for speeding up and slowing down
             final double x1 = -this.millisToSpeedUp;
             final double y1 = 1;
             final double x2 = 0;
@@ -455,12 +499,15 @@ public class AutonomousInstructions {
     public void AddSeqMotorPowerInstruction(long delay, DcMotor motor, double power) {
         seqInstructions.add(new SequentialMotorPowerInstruction(delay, motor, power));
     }
+
     public void AddSeqMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait) {
         seqInstructions.add(new SequentialMotorDistanceInstruction(delay, motor, inches, wait));
     }
+
     public void AddSeqServoInstruction(long delay, Servo servo, double position, boolean wait) {
         seqInstructions.add(new SequentialServoInstruction(delay, servo, position, wait));
     }
+
     public void AddSeqDrivingInstruction(long delay, ArrayList<DcMotor> driveMotors, double inches, int methodKey) {
         seqInstructions.add(new SequentialDrivingInstruction(delay, driveMotors, inches, methodKey));
     }

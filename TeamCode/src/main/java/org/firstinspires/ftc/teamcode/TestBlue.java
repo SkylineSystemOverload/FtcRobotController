@@ -129,7 +129,31 @@ public class TestBlue extends LinearOpMode {
         ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
 
         // sequential instructions
+        // TEST
         Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
+
+        /*
+        // drive to line
+        Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
+
+        // rev launcher
+        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .54);
+
+        // shoot and strafe
+        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(0, robot.servo1, .5, false);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(0, robot.servo1, .5, false);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(0, robot.servo1, .5, false);
+
+        // park and finish
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 5, Instructions.driveForward);
+        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
+         */
 
         // update information on the driver station phone screen
         telemetry.addData("Loaded Instructions", "Success");
