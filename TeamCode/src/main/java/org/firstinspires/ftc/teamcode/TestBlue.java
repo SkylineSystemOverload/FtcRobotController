@@ -129,7 +129,7 @@ public class TestBlue extends LinearOpMode {
         ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
 
         // sequential instructions
-        Instructions.AddSeqDrivingInstruction(100, driveMotors, 12, Instructions.driveForward);
+        Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
 
         // update information on the driver station phone screen
         telemetry.addData("Loaded Instructions", "Success");
@@ -233,10 +233,8 @@ public class TestBlue extends LinearOpMode {
     private void rotate(int degrees, double power) {
         // restart imu angle tracking.
         resetAngle();
-
         // if degrees > 359 we cap at 359 with same sign as original degrees.
         if (Math.abs(degrees) > 359) degrees = (int) Math.copySign(359, degrees);
-
         // start pid controller. PID controller will monitor the turn angle with respect to the
         // target angle and reduce power as we approach the target angle. This is to prevent the
         // robots momentum from overshooting the turn after we turn off the power. The PID controller
@@ -245,16 +243,13 @@ public class TestBlue extends LinearOpMode {
         // dependant on the motor and gearing configuration, starting power, weight of the robot and the
         // on target tolerance. If the controller overshoots, it will reverse the sign of the output
         // turning the robot back toward the setpoint value.
-
         pidRotate.reset();
         pidRotate.setSetpoint(degrees);
         pidRotate.setInputRange(0, degrees);
         pidRotate.setOutputRange(0, power);
         pidRotate.setTolerance(1);
         pidRotate.enable();
-
         // getAngle() returns + when rotating counter clockwise (left) and - when rotating clockwise (right).
-
         // rotate until turn is completed.
         if (degrees < 0) { // right turn
             // On right turn we have to get off zero first.
@@ -262,7 +257,6 @@ public class TestBlue extends LinearOpMode {
                 TurnRight();
                 sleep(100);
             }
-
             do {
                 power = pidRotate.performPID(getAngle()); // power will be - on right turn.
                 TurnLeft();
@@ -272,16 +266,11 @@ public class TestBlue extends LinearOpMode {
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
                 TurnLeft();
             } while (opModeIsActive() && !pidRotate.onTarget());
-
-
         // turn the motors off.
         StopDriving(0);
-
         rotation = getAngle();
-
         // wait for rotation to stop.
         sleep(500);
-
         // reset angle tracking on new heading.
         resetAngle();
     }*/

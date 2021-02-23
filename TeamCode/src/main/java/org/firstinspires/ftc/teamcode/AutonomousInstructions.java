@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.opencv.core.TickMeter;
+
 import java.util.ArrayList;
 
 /*
@@ -209,6 +212,11 @@ public class AutonomousInstructions {
         private final int method;
         private double speedMultiplier = 0;
         private long driveStartTime = 0;
+        private long slowStartTime = 0;
+        private final int inchesTillSlowDown = 2;
+        private boolean slowingDown = false;
+        private final double distanceThreshold;
+
 
         /*
         initialization constructor
@@ -219,6 +227,13 @@ public class AutonomousInstructions {
             this.distance = (int)Math.round(inches * TICKS_PER_INCHES);
             this.method = methodKey;
             this.drive = true;
+            // make the threshold
+            if (this.distance < (this.inchesTillSlowDown * TICKS_PER_INCHES)) {
+                this.distanceThreshold = this.distance * .75;
+            }
+            else {
+                this.distanceThreshold = this.distance - (this.inchesTillSlowDown * TICKS_PER_INCHES);
+            }
         }
 
         /*
@@ -262,12 +277,6 @@ public class AutonomousInstructions {
                 motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
-            // set the motor speed
-            for (DcMotor motor: this.driveMotors) {
-                motor.setPower(speed);
-            }
-
-            // set the drive start time
             this.driveStartTime = System.currentTimeMillis();
         }
 
@@ -289,10 +298,24 @@ public class AutonomousInstructions {
 
                 // apply correction otherwise
                 if (!this.dead) {
+                    // adjust multiplier to slow down
+                    // find smallest distance traveled
+                    int ticksTraveled = this.driveMotors.get(0).getCurrentPosition();
+                    for (DcMotor motor: this.driveMotors) {
+                        if (motor.getCurrentPosition() < ticksTraveled) {
+                            ticksTraveled = motor.getCurrentPosition();
+                        }
+                    }
+
+                    if (ticksTraveled > this.distanceThreshold) { // start slowing down
+                        this.slowStartTime = System.currentTimeMillis();
+                        this.slowingDown = true;
+                    }
+
                     // adjust the multiplier
                     this.AdjustMultiplier();
 
-                   // add the correction correctly
+                    // add the correction correctly
                     this.driveMotors.get(0).setPower((speed - correction) * this.speedMultiplier);
                     this.driveMotors.get(1).setPower((speed + correction) * this.speedMultiplier);
                     this.driveMotors.get(2).setPower((speed - correction) * this.speedMultiplier);
@@ -303,10 +326,24 @@ public class AutonomousInstructions {
 
         // speed multiplier function
         private void AdjustMultiplier() {
-            double quadraticConstantA = (3 * Math.pow(10, -8));
-            this.speedMultiplier = quadraticConstantA * Math.pow(System.currentTimeMillis() - this.driveStartTime, 2) + .25; // exponential function
+            double quadraticConstantAFiveSeconds = (3 * Math.pow(10, -8));
+            double quadraticConstantAOneSecond = (7.5 * Math.pow(10, -7));
+            double value;
+
+            if (this.slowingDown) {
+                value = 1 - quadraticConstantAOneSecond * Math.pow(System.currentTimeMillis() - this.slowStartTime, 2);
+            }
+            else {
+                value = quadraticConstantAOneSecond * Math.pow(System.currentTimeMillis() - this.driveStartTime, 2) + .25;
+            }
+
+            this.speedMultiplier = value;
+
             if (this.speedMultiplier > 1) {
                 this.speedMultiplier = 1;
+            }
+            else if (this.speedMultiplier < .25) {
+                this.speedMultiplier = .25;
             }
         }
     }
