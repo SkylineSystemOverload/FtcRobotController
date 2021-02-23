@@ -307,7 +307,7 @@ public class AutonomousInstructions {
                         }
                     }
 
-                    if (ticksTraveled > this.distanceThreshold) { // start slowing down
+                    if (ticksTraveled > this.distanceThreshold && !this.slowingDown) { // start slowing down
                         this.slowStartTime = System.currentTimeMillis();
                         this.slowingDown = true;
                     }
