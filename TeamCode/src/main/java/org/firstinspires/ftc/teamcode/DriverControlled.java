@@ -27,6 +27,11 @@ public class DriverControlled extends OpMode{
     boolean parked = false;
     long driveStartTime = 0;
 
+    // wobble arm boolean vars
+    boolean goingDown = false;
+    boolean goingUp = false;
+    final int travelDistance = 420; // literally just a guess
+
     // CONSTANTS
 
     // RUN ONCE ON init()
@@ -66,11 +71,6 @@ public class DriverControlled extends OpMode{
         boolean G1rightBumper = gamepad1.right_bumper;
         boolean G1leftBumper = gamepad1.left_bumper;
 
-        // wobble arm boolean vars
-        boolean goingDown = false;
-        boolean goingUp = false;
-        final int travelDistance = 0;
-
         // check if we start moving
         if ((0 < Math.abs(G1leftStickY) || 0 < Math.abs(G1leftStickX) || 0 < Math.abs(G1rightStickX))) {
             if (!moving) {
@@ -80,21 +80,14 @@ public class DriverControlled extends OpMode{
         }
         else {
             moving = false;
-
         }
 
-        //mecanum drive
-        /*robot.motor1.setPower((G1leftStickY) + (G1leftStickX) + (G1rightStickX));
-        robot.motor3.setPower((G1leftStickY) - (G1leftStickX) + (G1rightStickX));
-        robot.motor2.setPower((G1leftStickY) - (G1leftStickX) - (G1rightStickX));
-        robot.motor4.setPower((G1leftStickY) + (G1leftStickX) - (G1rightStickX));*/
-        //mecanum drive
         robot.motor1.setPower(((G1leftStickY) + (G1leftStickX) + (G1rightStickX)) * MultiplierFunction(driveStartTime));
         robot.motor3.setPower(((G1leftStickY) - (G1leftStickX) + (G1rightStickX)) * MultiplierFunction(driveStartTime));
         robot.motor2.setPower(((G1leftStickY) - (G1leftStickX) - (G1rightStickX)) * MultiplierFunction(driveStartTime));
         robot.motor4.setPower(((G1leftStickY) + (G1leftStickX) - (G1rightStickX)) * MultiplierFunction(driveStartTime));
 
-        // intake statements
+        // intake statements -----------------------------------------------------------------------
         if(G1LT>0) { // run intake
             robot.motor5.setPower(1);
         }
@@ -105,7 +98,7 @@ public class DriverControlled extends OpMode{
             robot.motor5.setPower(0);
         }
 
-        // launcher statements
+        // launcher statements ---------------------------------------------------------------------
         if(G1RT>0 && G1RT<.75) { // rev launcher
         robot.motor7.setPower(.5);
         }
@@ -116,7 +109,7 @@ public class DriverControlled extends OpMode{
             robot.motor7.setPower(0);
         }
 
-        // shooter and intake servo statements
+        // shooter and intake servo statements -----------------------------------------------------
         if(G1x) { // use shooting and intake clean up servo
             robot.servo1.setPosition(1.2);
             robot.servo3.setPosition(1.2);
@@ -127,20 +120,61 @@ public class DriverControlled extends OpMode{
             robot.servo3.setPosition(0.275);
         }
 
-        // wobble arm statements
+        // wobble arm statements -------------------------------------------------------------------
         if(G1a) { // lift wobble arm
-            robot.motor6.setPower(.3);
+            // robot.motor6.setPower(.3);
+
+            // need to test
+            if (!goingUp && !goingDown) {
+                // reset
+                goingUp = true;
+                goingDown = false;
+
+                // calculate distance to travel
+                final int distance = travelDistance - robot.motor6.getCurrentPosition();
+
+                // reset encoder and set to move to the distance at .5 speed
+                robot.motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.motor6.setTargetPosition(distance);
+                robot.motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.motor6.setPower(.3);
+            }
         }
         else if (G1b) { // lower wobble arm
-            robot.motor6.setPower(-.3);
+            // robot.motor6.setPower(-.3);
+
+            // need to test
+            if (!goingDown && !goingUp) {
+                //reset
+                goingDown = true;
+                goingUp = false;
+
+                // calculate distance to travel
+                final int distance = travelDistance - Math.abs(robot.motor6.getCurrentPosition());
+
+                // reset encoder and set to move to the distance at .5 speed
+                robot.motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.motor6.setTargetPosition(-distance);
+                robot.motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.motor6.setPower(.3);
+            }
+            // open finger when going down
+            robot.servo4.setPosition(1);
         }
-        else { // stop wobble arm
+        /*else { // stop wobble arm
             robot.motor6.setPower(0);
+        }*/
+
+        if (!robot.motor6.isBusy()) {
+            goingUp = false;
+            goingDown = false;
         }
-        if(G1leftBumper) { // open finger
+
+        // finger statements -----------------------------------------------------------------------
+        if(G1leftBumper) { // close
             robot.servo4.setPosition(0);
         }
-        else if (G1rightBumper) {
+        else if (G1rightBumper) { // open
             robot.servo4.setPosition(1);
         }
 
