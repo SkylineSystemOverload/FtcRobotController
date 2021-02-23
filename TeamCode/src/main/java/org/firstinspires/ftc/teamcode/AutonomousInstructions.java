@@ -6,13 +6,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.opencv.core.TickMeter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /*
 instantiate this class into an object for use in any autonomous mode
  */
 public class AutonomousInstructions {
     // variables for the autonomous instructions class object
-    private final double speed = .75;
+    private final double speed = 1;
     private final int TICKS_PER_REVOLUTION = 1120;
     private final int WHEEL_DIAM = 4;
     private final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
@@ -210,6 +211,8 @@ public class AutonomousInstructions {
         private final ArrayList<DcMotor> driveMotors;
         private final int distance;
         private final int method;
+
+        // used for speeding up and slowing down
         private double speedMultiplier = 0;
         private long driveStartTime = 0;
         private long slowStartTime = 0;
@@ -217,6 +220,10 @@ public class AutonomousInstructions {
         private boolean slowingDown = false;
         private final double distanceThreshold;
 
+        // constants used for speeding up and slowing down
+        private final double millisToSpeedUp = 1000;
+        private final double millisToSlowDown = 1000;
+        private final double base = .1;
 
         /*
         initialization constructor
@@ -326,15 +333,22 @@ public class AutonomousInstructions {
 
         // speed multiplier function
         private void AdjustMultiplier() {
-            double quadraticConstantAFiveSeconds = (3 * Math.pow(10, -8));
-            double quadraticConstantAOneSecond = (7.5 * Math.pow(10, -7));
             double value;
 
+            /*final double twoSeocndsQuadraticConstantA = 2.5 * Math.pow(10, -7)
             if (this.slowingDown) {
-                value = 1 - quadraticConstantAOneSecond * Math.pow(System.currentTimeMillis() - this.slowStartTime, 2);
+                value = 1 - twoSeocndsQuadraticConstantA * Math.pow(System.currentTimeMillis() - this.slowStartTime, 2);
             }
             else {
-                value = quadraticConstantAOneSecond * Math.pow(System.currentTimeMillis() - this.driveStartTime, 2) + .25;
+                value = twoSeocndsQuadraticConstantA * Math.pow(System.currentTimeMillis() - this.driveStartTime, 2) + this.base;
+            }*/
+
+            // test
+            if (this.slowingDown) {
+                value = this.SlowDown();
+            }
+            else {
+                value = this.SpeedUp();
             }
 
             this.speedMultiplier = value;
@@ -342,9 +356,43 @@ public class AutonomousInstructions {
             if (this.speedMultiplier > 1) {
                 this.speedMultiplier = 1;
             }
-            else if (this.speedMultiplier < .25) {
-                this.speedMultiplier = .25;
+            else if (this.speedMultiplier < this.base) {
+                this.speedMultiplier = this.base;
             }
+        }
+
+        // quadratic formulas for slowing down and speeding up
+        private double SlowDown() {
+            // define the three points
+            final double x1 = -this.millisToSlowDown;
+            final double y1 = this.base;
+            final double x2 = 0;
+            final double y2 = 1;
+            final double x3 = this.millisToSlowDown;
+            final double y3 = this.base;
+
+            final double elapsedTime = System.currentTimeMillis() - this.slowStartTime;
+
+            // return y
+            return ((elapsedTime-x2) * (elapsedTime-x3)) / ((x1-x2) * (x1-x3)) * y1 +
+                    ((elapsedTime-x1) * (elapsedTime-x3)) / ((x2-x1) * (x2-x3)) * y2 +
+                    ((elapsedTime-x1) * (elapsedTime-x2)) / ((x3-x1) * (x3-x2)) * y3;
+        }
+        private double SpeedUp() {
+            // define the three points
+            final double x1 = -this.millisToSpeedUp;
+            final double y1 = 1;
+            final double x2 = 0;
+            final double y2 = this.base;
+            final double x3 = this.millisToSpeedUp;
+            final double y3 = 1;
+
+            final double elapsedTime = System.currentTimeMillis() - this.driveStartTime;
+
+            // return y
+            return ((elapsedTime-x2) * (elapsedTime-x3)) / ((x1-x2) * (x1-x3)) * y1 +
+                    ((elapsedTime-x1) * (elapsedTime-x3)) / ((x2-x1) * (x2-x3)) * y2 +
+                    ((elapsedTime-x1) * (elapsedTime-x2)) / ((x3-x1) * (x3-x2)) * y3;
         }
     }
 
