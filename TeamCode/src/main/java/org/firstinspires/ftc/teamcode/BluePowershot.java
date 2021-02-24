@@ -91,7 +91,6 @@ public class BluePowershot extends LinearOpMode
 
     public void CalculatePower()
     {
-        runtime.reset(); //resets the time
         if (targetPower > currentPower) {
             newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
         }
