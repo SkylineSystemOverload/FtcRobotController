@@ -17,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
+@Disabled
 @Autonomous(name="BluePowershot", group="Test")
 public class BluePowershot extends LinearOpMode
 {
@@ -28,6 +28,8 @@ public class BluePowershot extends LinearOpMode
     BNO055IMU             imu;
     Orientation           lastAngles = new Orientation();
     double                globalAngle, power = .50, correction, rotation;
+    double newPower;
+    double targetPower = power; //power, as defined earlier in the code, will now be named targetPower
 
     //Calls the PIDHardware class
     PIDHardware           pidRotate, pidDrive;
@@ -36,10 +38,10 @@ public class BluePowershot extends LinearOpMode
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward()
     {
-        robot.motor1.setPower(power - correction);
-        robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(power + correction);
+        robot.motor1.setPower(newPower - correction); //sets the motors power
+        robot.motor2.setPower(newPower + correction);
+        robot.motor3.setPower(newPower - correction);
+        robot.motor4.setPower(newPower + correction);
     }
     //Same as DriveForward() but in reverse
     public void DriveBackward()
@@ -150,15 +152,25 @@ public class BluePowershot extends LinearOpMode
         pidDrive.enable();
 
         //captures System.currentTimeMillis and saves it as startTime. Subtract the later time from this time to get the change in time.
-       long startTime = System.currentTimeMillis();
+        boolean started = false;
+        long startTime = 0;
+        long elapsedTime;
 
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
         while (opModeIsActive())
         {
+            // simple switch that sets the time as soon as op mode is started (activates only once and at the beginning of the loop)
+            if (!started) {
+                started = true;
+                startTime = System.currentTimeMillis();
+            }
+
+            elapsedTime = System.currentTimeMillis() - startTime;
+
             // Use PID with imu input to drive in a straight line.
-            //renames pidDrive.performPID(getAngle()) to correction for simple nomenclature.
+            //Gets the correction value based on our current angle
             correction = pidDrive.performPID(getAngle());
 
             //Displays the realtime heading information on the phone.
@@ -170,91 +182,118 @@ public class BluePowershot extends LinearOpMode
 
             //The series of instructions the robot will do.
             //Reverse Collector
-            if(System.currentTimeMillis() - startTime > 0 && System.currentTimeMillis() - startTime < 500) {
+            if(elapsedTime > 0 && elapsedTime < 500) {
                 robot.motor5.setPower(-0.5);
             }
             //Turn Off Collector
-            else if(System.currentTimeMillis() - startTime > 500 && System.currentTimeMillis() - startTime < 1000) {
+            else if(elapsedTime > 500 && elapsedTime < 1000) {
                 robot.motor5.setPower(0);
             }
             //Strafe Right
-            else if(System.currentTimeMillis() - startTime > 1000 && System.currentTimeMillis() - startTime < 1500) {
+            else if(elapsedTime > 1000 && elapsedTime < 1500) {
                 StrafeRight();
             }
             //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 1500 && System.currentTimeMillis() - startTime < 2000) {
+            else if(elapsedTime > 1500 && elapsedTime < 2000) {
                 StopDriving();
             }
             //DriveForward
-            else if(System.currentTimeMillis() - startTime > 2000 && System.currentTimeMillis() - startTime < 6250) {
+            else if(elapsedTime > 2000 && elapsedTime < 5750) {
+                double currentPower = robot.motor1.getPower();
+                    if (!started) {
+                    started = true;
+                    runtime.reset(); //resets the time
+                        if (targetPower > currentPower) {
+                            newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+                        }
+                        else if (targetPower < currentPower) {
+                            newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+                        }
+                        else {
+                            newPower = targetPower;
+                        }
+
+                        if (newPower > targetPower && targetPower > currentPower) {
+                            newPower = targetPower; //caps the power added by the graph to the power we set
+                        }
+
+                        if (newPower < targetPower && targetPower < currentPower) {
+                            newPower = targetPower; //caps the power added by the graph to the power we set
+                        }
+                    }
                 DriveForward();
             }
+            //Reset Switch!
+            else if(elapsedTime > 5750 && elapsedTime < 5800) {
+                started = false;
+            }
+            
             //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 5750 && System.currentTimeMillis() - startTime < 6250) {
+            else if(elapsedTime > 5750 && elapsedTime < 6250) {
                 StopDriving();
             }
             //Strafe Right
-            else if(System.currentTimeMillis() - startTime > 6250 && System.currentTimeMillis() - startTime < 6500) {
+            else if(elapsedTime > 6250 && elapsedTime < 6500) {
                 StrafeRight();
             }
             //StopDriving
-            else if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 7000) {
+            else if(elapsedTime > 6500 && elapsedTime < 7000) {
                 StopDriving();
             }
             //Shoot
-            else if(System.currentTimeMillis() - startTime > 8500 && System.currentTimeMillis() - startTime < 9500) {
+            else if(elapsedTime > 8500 && elapsedTime < 9500) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(System.currentTimeMillis() - startTime > 9500 && System.currentTimeMillis() - startTime < 10500) {
+            else if(elapsedTime > 9500 && elapsedTime < 10500) {
                 robot.servo1.setPosition(0.5);
             }
             //Strafe Left
-            else if(System.currentTimeMillis() - startTime > 10500 && System.currentTimeMillis() - startTime < 10900) {
+            else if(elapsedTime > 10500 && elapsedTime < 10900) {
                 StrafeLeft();
             }
             //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 10900 && System.currentTimeMillis() - startTime < 11400) {
+            else if(elapsedTime > 10900 && elapsedTime < 11400) {
                 StopDriving();
             }
             //Shoot
-            else if(System.currentTimeMillis() - startTime > 11400 && System.currentTimeMillis() - startTime < 12400) {
+            else if(elapsedTime > 11400 && elapsedTime < 12400) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(System.currentTimeMillis() - startTime > 12400 && System.currentTimeMillis() - startTime < 12900) {
+            else if(elapsedTime > 12400 && elapsedTime < 12900) {
                 robot.servo1.setPosition(0.5);
             }
             //Strafe Left***
-            else if(System.currentTimeMillis() - startTime > 12900 && System.currentTimeMillis() - startTime < 13400) {
+            else if(elapsedTime > 12900 && elapsedTime < 13400) {
                 StrafeRight();
             }
             //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 13400 && System.currentTimeMillis() - startTime < 13900) {
+            else if(elapsedTime > 13400 && elapsedTime < 13900) {
                 StopDriving();
             }
             /*//Shoot
-            else if(System.currentTimeMillis() - startTime > 13900 && System.currentTimeMillis() - startTime < 14900) {
+            else if(elapsedTime > 13900 && elapsedTime < 14900) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(System.currentTimeMillis() - startTime > 14900 && System.currentTimeMillis() - startTime < 15400) {
+            else if(elapsedTime > 14900 && elapsedTime < 15400) {
                 robot.servo1.setPosition(0.5);
             }*/
             //Drive Forward
-            else if(System.currentTimeMillis() - startTime > 15400 && System.currentTimeMillis() - startTime < 15900) {
+            else if(elapsedTime > 15400 && elapsedTime < 15900) {
                 DriveForward();
             }
             //Stop Driving
-            else if(System.currentTimeMillis() - startTime > 15900 && System.currentTimeMillis() - startTime < 30000) {
+            else if(elapsedTime > 15900 && elapsedTime < 30000) {
                 StopDriving();
             }
             //Turn on launcher
-            if(System.currentTimeMillis() - startTime > 6500 && System.currentTimeMillis() - startTime < 15400) {
+            if(elapsedTime > 6500 && elapsedTime < 15400) {
                 robot.motor7.setPower(.55);
             }
             //Turn Off Shooter
-            else if(System.currentTimeMillis() - startTime > 15400 && System.currentTimeMillis() - startTime < 16400) {
+            else if(elapsedTime > 15400 && elapsedTime < 16400) {
                 robot.motor7.setPower(0);
             }
         }
