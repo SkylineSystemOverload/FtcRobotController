@@ -200,34 +200,34 @@ public class BluePowershot extends LinearOpMode
             //DriveForward
             else if(elapsedTime > 2000 && elapsedTime < 5750) {
                 double currentPower = robot.motor1.getPower();
-                    if (!started) {
+                if (!started) {
                     started = true;
                     runtime.reset(); //resets the time
-                        if (targetPower > currentPower) {
-                            newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
-                        }
-                        else if (targetPower < currentPower) {
-                            newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
-                        }
-                        else {
-                            newPower = targetPower;
-                        }
-
-                        if (newPower > targetPower && targetPower > currentPower) {
-                            newPower = targetPower; //caps the power added by the graph to the power we set
-                        }
-
-                        if (newPower < targetPower && targetPower < currentPower) {
-                            newPower = targetPower; //caps the power added by the graph to the power we set
-                        }
+                    if (targetPower > currentPower) {
+                        newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
                     }
+                    else if (targetPower < currentPower) {
+                        newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+                    }
+                    else {
+                        newPower = targetPower;
+                    }
+
+                    if (newPower > targetPower && targetPower > currentPower) {
+                        newPower = targetPower; //caps the power added by the graph to the power we set
+                    }
+
+                    if (newPower < targetPower && targetPower < currentPower) {
+                        newPower = targetPower; //caps the power added by the graph to the power we set
+                    }
+                }
                 DriveForward();
             }
             //Reset Switch!
             else if(elapsedTime > 5750 && elapsedTime < 5800) {
                 started = false;
             }
-            
+
             //Stop Driving
             else if(elapsedTime > 5750 && elapsedTime < 6250) {
                 StopDriving();
