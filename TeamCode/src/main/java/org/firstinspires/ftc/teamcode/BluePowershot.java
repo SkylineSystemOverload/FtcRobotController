@@ -224,8 +224,9 @@ public class BluePowershot extends LinearOpMode
                 currentPower = robot.motor1.getPower();
                 if (!started) {
                     started = true;
-                    CalculatePower();
-                }
+                    runtime.reset(); //resets the time
+                    }
+                CalculatePower();
                 DriveForward();
             }
             //Reset Switch!
