@@ -30,6 +30,7 @@ public class BluePowershot extends LinearOpMode
     double                globalAngle, power = .50, correction, rotation;
     double newPower;
     double targetPower = power; //power, as defined earlier in the code, will now be named targetPower
+    double currentPower;
 
     //Calls the PIDHardware class
     PIDHardware           pidRotate, pidDrive;
@@ -88,6 +89,27 @@ public class BluePowershot extends LinearOpMode
         robot.motor4.setPower(0);
     }
 
+    public void CalculatePower()
+    {
+        runtime.reset(); //resets the time
+        if (targetPower > currentPower) {
+            newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+        }
+        else if (targetPower < currentPower) {
+            newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+        }
+        else {
+            newPower = targetPower;
+        }
+
+        if (newPower > targetPower && targetPower > currentPower) {
+            newPower = targetPower; //caps the power added by the graph to the power we set
+        }
+
+        if (newPower < targetPower && targetPower < currentPower) {
+            newPower = targetPower; //caps the power added by the graph to the power we set
+        }
+    }
 
     //This is what happens when the init button is pushed.
     @Override
@@ -199,27 +221,10 @@ public class BluePowershot extends LinearOpMode
             }
             //DriveForward
             else if(elapsedTime > 2000 && elapsedTime < 5750) {
-                double currentPower = robot.motor1.getPower();
+                currentPower = robot.motor1.getPower();
                 if (!started) {
                     started = true;
-                    runtime.reset(); //resets the time
-                    if (targetPower > currentPower) {
-                        newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
-                    }
-                    else if (targetPower < currentPower) {
-                        newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
-                    }
-                    else {
-                        newPower = targetPower;
-                    }
-
-                    if (newPower > targetPower && targetPower > currentPower) {
-                        newPower = targetPower; //caps the power added by the graph to the power we set
-                    }
-
-                    if (newPower < targetPower && targetPower < currentPower) {
-                        newPower = targetPower; //caps the power added by the graph to the power we set
-                    }
+                    CalculatePower();
                 }
                 DriveForward();
             }
@@ -229,7 +234,7 @@ public class BluePowershot extends LinearOpMode
             }
 
             //Stop Driving
-            else if(elapsedTime > 5750 && elapsedTime < 6250) {
+            else if(elapsedTime > 5800 && elapsedTime < 6250) {
                 StopDriving();
             }
             //Strafe Right
