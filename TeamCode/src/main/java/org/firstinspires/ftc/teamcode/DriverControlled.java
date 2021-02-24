@@ -30,7 +30,8 @@ public class DriverControlled extends OpMode{
     // wobble arm boolean vars
     boolean goingDown = false;
     boolean goingUp = false;
-    final int travelDistance = 420; // literally just a guess
+    final int travelDistance = 440; // literally just a guess
+    final int encoderTolerance = 5;
 
     // CONSTANTS
 
@@ -49,6 +50,8 @@ public class DriverControlled extends OpMode{
     //RUN ONCE ON start()
     @Override
     public void start() {
+        robot.motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     //LOOP ON start()
@@ -100,7 +103,7 @@ public class DriverControlled extends OpMode{
 
         // launcher statements ---------------------------------------------------------------------
         if(G1RT>0 && G1RT<.75) { // rev launcher
-        robot.motor7.setPower(.5);
+            robot.motor7.setPower(.5);
         }
         else if (G1RT > .75) {
             robot.motor7.setPower(G1RT);
@@ -122,52 +125,28 @@ public class DriverControlled extends OpMode{
 
         // wobble arm statements -------------------------------------------------------------------
         if(G1a) { // lift wobble arm
-            // robot.motor6.setPower(.3);
 
-            // need to test
-            if (!goingUp && !goingDown) {
-                // reset
-                goingUp = true;
-                goingDown = false;
+            robot.motor6.setTargetPosition(0);
+            robot.motor6.setPower(.3);
 
-                // calculate distance to travel
-                final int distance = travelDistance - robot.motor6.getCurrentPosition();
-
-                // reset encoder and set to move to the distance at .5 speed
-                robot.motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                robot.motor6.setTargetPosition(distance);
-                robot.motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.motor6.setPower(.3);
-            }
         }
         else if (G1b) { // lower wobble arm
-            // robot.motor6.setPower(-.3);
+            // reset encoder and set to move to the distance at .5 speed
+            robot.motor6.setTargetPosition(travelDistance);
+            robot.motor6.setPower(.3);
 
-            // need to test
-            if (!goingDown && !goingUp) {
-                //reset
-                goingDown = true;
-                goingUp = false;
-
-                // calculate distance to travel
-                final int distance = travelDistance - Math.abs(robot.motor6.getCurrentPosition());
-
-                // reset encoder and set to move to the distance at .5 speed
-                robot.motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                robot.motor6.setTargetPosition(-distance);
-                robot.motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.motor6.setPower(.3);
-            }
             // open finger when going down
-            robot.servo4.setPosition(1);
+            robot.servo4.setPosition(0);
         }
         /*else { // stop wobble arm
             robot.motor6.setPower(0);
         }*/
 
-        if (!robot.motor6.isBusy()) {
-            goingUp = false;
+        if (goingDown && Math.abs(robot.motor6.getCurrentPosition() - travelDistance) > encoderTolerance) {
             goingDown = false;
+        }
+        else if (goingUp && Math.abs(robot.motor6.getCurrentPosition()) > encoderTolerance) {
+            goingUp = false;
         }
 
         // finger statements -----------------------------------------------------------------------
@@ -178,15 +157,17 @@ public class DriverControlled extends OpMode{
             robot.servo4.setPosition(1);
         }
 
+        /*
         telemetry.addData("motor1 Power", robot.motor1.getPower());
         telemetry.addData("motor2 Power", robot.motor2.getPower());
         telemetry.addData("motor3 Power", robot.motor3.getPower());
         telemetry.addData("motor4 Power", robot.motor4.getPower());
         telemetry.addData("motor5 Power", robot.motor5.getPower());
         telemetry.addData("motor6 Power", robot.motor6.getPower());
-        telemetry.addData("motor7 Power", robot.motor7.getPower());
-        telemetry.addData("right bumper", G1rightBumper);
-        telemetry.addData("left bumper", G1leftBumper);
+        telemetry.addData("motor7 Power", robot.motor7.getPower());*/
+        telemetry.addData("encoder 6", robot.motor6.getCurrentPosition());
+        telemetry.addData("wobble down", goingDown);
+        telemetry.addData("wobble up", goingUp);
     }
 
     // RUN ONCE ON stop()

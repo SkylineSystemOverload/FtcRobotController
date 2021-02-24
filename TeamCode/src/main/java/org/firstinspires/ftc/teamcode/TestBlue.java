@@ -46,7 +46,7 @@ public class TestBlue extends LinearOpMode {
     //Calls the PIDHardware class
     PIDHardware pidRotate, pidDrive;
 
-    // instantiates the autonomous instruction handler class
+    // instatiates the autonomous instruction handler class
     AutonomousInstructions Instructions = new AutonomousInstructions();
 
     // used to end the whole op mode
@@ -129,31 +129,8 @@ public class TestBlue extends LinearOpMode {
         ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
 
         // sequential instructions
-        // TEST
         Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
 
-        /*
-        // drive to line
-        Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
-
-        // rev launcher
-        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .54);
-
-        // shoot and strafe
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(0, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(0, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(0, robot.servo1, .5, false);
-
-        // park and finish
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 5, Instructions.driveForward);
-        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
-         */
 
         // update information on the driver station phone screen
         telemetry.addData("Loaded Instructions", "Success");
@@ -196,13 +173,9 @@ public class TestBlue extends LinearOpMode {
             telemetry.addData("Correction", correction);
             telemetry.addData("Turn Rotation", rotation);*/
 
+            telemetry.addData("Correction", correction);
             telemetry.addData("Elapsed Time", elapsedTime);
             telemetry.addData("Instructions", Instructions.InstructionLeft());
-            telemetry.addData("Encoder 1", robot.motor1.getCurrentPosition());
-            telemetry.addData("Encoder 2", robot.motor2.getCurrentPosition());
-            telemetry.addData("Encoder 3", robot.motor3.getCurrentPosition());
-            telemetry.addData("Encoder 4", robot.motor4.getCurrentPosition());
-            telemetry.addData("Encoder 7", robot.motor7.getCurrentPosition());
             telemetry.update();
 
         }

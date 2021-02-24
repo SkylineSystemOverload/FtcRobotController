@@ -13,7 +13,7 @@ instantiate this class into an object for use in any autonomous mode
  */
 public class AutonomousInstructions {
     // variables for the autonomous instructions class object
-    private final double speed = 1;
+    private final double speed = .75;
     private final int TICKS_PER_REVOLUTION = 1120;
     private final int WHEEL_DIAM = 4;
     private final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
@@ -216,19 +216,20 @@ public class AutonomousInstructions {
         private double speedMultiplier;
         private long driveStartTime;
         private long slowStartTime;
-        private final int inchesTillSlowDown = 5;
         private boolean slowingDown = false;
         private final double distanceThreshold;
 
-        private final double millisToSpeedUp = 1000;
+        private final double millisToSpeedUp = 500;
         private final double millisToSlowDown = 1000;
         private final double base = .1;
-        private ArrayList<Integer> currentTicks;
-        private ArrayList<Integer> targetTicks;
+        private ArrayList<Integer> currentTicks = new ArrayList<>();
+        private ArrayList<Integer> targetTicks = new ArrayList<>();
 
         // used for correction
         private boolean correcting = false;
+        private final double correctionTolerance = .1;
         private final double correctingSpeed = .5;
+        private final int encoderTolerance = 5;
 
         /*
         initialization constructor
@@ -239,15 +240,18 @@ public class AutonomousInstructions {
             if (methodKey == strafeLeft || methodKey == strafeRight) {
                 inches *= 1.25;
             }
+            else if (methodKey == driveForward || methodKey == driveBackward) {
+                inches *= 1.07;
+            }
             this.distance = (int)Math.round(inches * TICKS_PER_INCHES);
             this.method = methodKey;
             this.drive = true;
             // make the threshold
-            if (this.distance < (this.inchesTillSlowDown * TICKS_PER_INCHES)) {
-                this.distanceThreshold = this.distance * .75;
+            if (inches > 20) {
+                this.distanceThreshold = this.distance * .6;
             }
             else {
-                this.distanceThreshold = this.distance - (this.inchesTillSlowDown * TICKS_PER_INCHES);
+                this.distanceThreshold = this.distance * .5;
             }
         }
 
@@ -305,11 +309,8 @@ public class AutonomousInstructions {
             }
             else { // not turning
                 // check if dead first
-                this.dead = true;
-                for (DcMotor motor: this.driveMotors) {
-                    if (motor.isBusy()) {
-                        this.dead = false;
-                    }
+                if (!this.correcting && !this.driveMotors.get(0).isBusy() && !this.driveMotors.get(1).isBusy() && !this.driveMotors.get(2).isBusy() && !this.driveMotors.get(3).isBusy()) {
+                    this.dead = true;
                 }
 
                 // apply correction otherwise
@@ -328,12 +329,16 @@ public class AutonomousInstructions {
                         this.slowingDown = true;
                     }
 
+
                     // adjust the multiplier
                     this.AdjustMultiplier();
 
-                    // TEST
+
+                    // TEST = DOESNT WORK BECAUSE WHEN PUSHED OFF COURSE THE MOTORS DONT TEND BE PUSHED SO MUCH
+                    /*
                     // correcting
-                    if (Math.abs(correction) > 0 && !this.correcting) {
+                    if (Math.abs(correction) > this.correctionTolerance && !this.correcting) {
+                        this.correcting = true;
                         for (DcMotor motor: this.driveMotors) {
                             // collect all current ticks
                             this.currentTicks.add(motor.getCurrentPosition());
@@ -350,10 +355,10 @@ public class AutonomousInstructions {
 
                             // set speed
                             motor.setPower(this.correctingSpeed);
-                            }
+                        }
                     }
                     // finished corrected
-                    else if (correction == 0 && this.correcting) {
+                    else if (Math.abs(correction) < this.correctionTolerance && this.correcting) {
                         for (int i = 0; i < this.driveMotors.size(); i++) {
                             // set motor's new target position to the difference between set distance and the distance traveled
                             this.driveMotors.get(0).setTargetPosition(this.targetTicks.get(0) - this.currentTicks.get(0));
@@ -361,15 +366,16 @@ public class AutonomousInstructions {
                             // set the speed
                             this.driveMotors.get(0).setPower(speed);
                         }
+                        this.correcting = false;
                     }
                     // regular driving
-                    else {
+                    else {*/
                         // add the correction correctly (correction is negative when robot veers left)
                         this.driveMotors.get(0).setPower(speed * this.speedMultiplier);
                         this.driveMotors.get(1).setPower(speed * this.speedMultiplier);
                         this.driveMotors.get(2).setPower(speed * this.speedMultiplier);
                         this.driveMotors.get(3).setPower(speed * this.speedMultiplier);
-                    }
+                    //}
                 }
             }
             if (this.dead) {
