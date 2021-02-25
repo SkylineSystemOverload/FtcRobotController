@@ -324,58 +324,21 @@ public class AutonomousInstructions {
                         }
                     }
 
-                    if (ticksTraveled > this.distanceThreshold && !this.slowingDown) { // start slowing down
+                    // slow down after hitting the threshold
+                    if (ticksTraveled > this.distanceThreshold && !this.slowingDown) {
                         this.slowStartTime = System.currentTimeMillis();
                         this.slowingDown = true;
                     }
 
-
                     // adjust the multiplier
                     this.AdjustMultiplier();
 
+                    // drive
+                    this.driveMotors.get(0).setPower(speed * this.speedMultiplier);
+                    this.driveMotors.get(1).setPower(speed * this.speedMultiplier);
+                    this.driveMotors.get(2).setPower(speed * this.speedMultiplier);
+                    this.driveMotors.get(3).setPower(speed * this.speedMultiplier);
 
-                    // TEST = DOESNT WORK BECAUSE WHEN PUSHED OFF COURSE THE MOTORS DONT TEND BE PUSHED SO MUCH
-                    /*
-                    // correcting
-                    if (Math.abs(correction) > this.correctionTolerance && !this.correcting) {
-                        this.correcting = true;
-                        for (DcMotor motor: this.driveMotors) {
-                            // collect all current ticks
-                            this.currentTicks.add(motor.getCurrentPosition());
-                            this.targetTicks.add(motor.getTargetPosition());
-
-                            // reset encoder
-                            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-                            // set motors to run to 0
-                            motor.setTargetPosition(0);
-
-                            // set motors to go to that position
-                            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                            // set speed
-                            motor.setPower(this.correctingSpeed);
-                        }
-                    }
-                    // finished corrected
-                    else if (Math.abs(correction) < this.correctionTolerance && this.correcting) {
-                        for (int i = 0; i < this.driveMotors.size(); i++) {
-                            // set motor's new target position to the difference between set distance and the distance traveled
-                            this.driveMotors.get(0).setTargetPosition(this.targetTicks.get(0) - this.currentTicks.get(0));
-
-                            // set the speed
-                            this.driveMotors.get(0).setPower(speed);
-                        }
-                        this.correcting = false;
-                    }
-                    // regular driving
-                    else {*/
-                        // add the correction correctly (correction is negative when robot veers left)
-                        this.driveMotors.get(0).setPower(speed * this.speedMultiplier);
-                        this.driveMotors.get(1).setPower(speed * this.speedMultiplier);
-                        this.driveMotors.get(2).setPower(speed * this.speedMultiplier);
-                        this.driveMotors.get(3).setPower(speed * this.speedMultiplier);
-                    //}
                 }
             }
             if (this.dead) {
