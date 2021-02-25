@@ -34,6 +34,10 @@ public class BlueWobble extends LinearOpMode
     double newPower;
     double targetPower = power; //power, as defined earlier in the code, will now be named targetPower
     double currentPower;
+    boolean goingDown = false;
+    boolean goingUp = false;
+    final int wobbleTravelDistance = 440; // literally just a guess
+    final int encoderTolerance = 5;
     boolean BoxOne = false;
     boolean BoxTwo = false;
     boolean BoxThree = false;
@@ -41,6 +45,10 @@ public class BlueWobble extends LinearOpMode
     boolean instruction2 = false;
     boolean instruction3 = false;
     boolean instruction4 = false;
+    boolean instruction5 = false;
+    boolean instruction6 = false;
+    boolean instruction7 = false;
+    boolean instruction8 = false;
 
     //Calls the PIDHardware class
     PIDHardware           pidRotate, pidDrive;
@@ -122,6 +130,22 @@ public class BlueWobble extends LinearOpMode
 
         if (newPower < targetPower && targetPower < currentPower) {
             newPower = targetPower; //caps the power added by the graph to the power we set
+        }
+    }
+
+    public void DropWobble()
+    {
+        // reset encoder and set to move to the distance at .3 speed
+        robot.motor6.setTargetPosition(wobbleTravelDistance);
+        robot.motor6.setPower(.3);
+
+        // open finger when going down
+        robot.servo4.setPosition(0);
+        if (goingDown && Math.abs(robot.motor6.getCurrentPosition() - wobbleTravelDistance) > encoderTolerance) {
+            goingDown = false;
+        }
+        else if (goingUp && Math.abs(robot.motor6.getCurrentPosition()) > encoderTolerance) {
+            goingUp = false;
         }
     }
 
@@ -253,11 +277,12 @@ public class BlueWobble extends LinearOpMode
             //The series of instructions the robot will do.
             //if we need to go to the first box
             if (BoxOne = true) {
-                //do this stuff
+                //Strafe Left
                 if (instruction1 && runtime.milliseconds()>0) {
                     StrafeLeft();
                     instruction2 = true;
                 }
+                //Stop Driving
                 else if (instruction2 && runtime.milliseconds()>500){
                     instruction1 = false;
                     StopDriving();
@@ -266,16 +291,45 @@ public class BlueWobble extends LinearOpMode
                     instruction3 = true;
                     instruction2 = false;
                 }
+                //Drive Forward
                 else if (instruction3 && runtime.milliseconds()>0){
                     DriveForward();
                     instruction4 = true;
                 }
+                //Stop Driving
                 else if (instruction4 && runtime.milliseconds()>3000){
                     instruction3 = false;
                     StopDriving();
                     runtime.reset();
                     sleep(200);
+                    instruction5 = true;
                     instruction4 = false;
+                }
+                //Drop Wobble Goal
+                else if (instruction5 && runtime.milliseconds()>0){
+                    DropWobble();
+                    instruction6 = true;
+                }
+                //Stop Driving
+                else if (instruction6 && runtime.milliseconds()>2000){
+                    instruction5 = false;
+                    robot.motor6.setPower(0);
+                    runtime.reset();
+                    sleep(200);
+                    instruction7 = true;
+                    instruction6 = false;
+                }
+                //Drive Backward
+                else if (instruction7 && runtime.milliseconds()>0){
+                    DriveBackward();
+                }
+                //Stop Driving
+                else if (instruction8 && runtime.milliseconds()>500){
+                    instruction7 = false;
+                    StopDriving();
+                    runtime.reset();
+                    sleep(200);
+                    instruction8 = false;
                 }
             }
             else if (BoxTwo = true) {
