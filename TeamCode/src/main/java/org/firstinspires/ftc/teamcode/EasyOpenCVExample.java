@@ -36,16 +36,18 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
-@Disabled
 @TeleOp
 public class EasyOpenCVExample extends LinearOpMode
 {
     OpenCvInternalCamera phoneCam;
     SkystoneDeterminationPipeline pipeline;
 
+
     @Override
     public void runOpMode()
     {
+        final int CAMERA_WIDTH = 320;
+        final int CAMERA_HEIGHT = 240;
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(OpenCvInternalCamera.CameraDirection.BACK, cameraMonitorViewId);
@@ -62,7 +64,7 @@ public class EasyOpenCVExample extends LinearOpMode
             @Override
             public void onOpened()
             {
-                phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                phoneCam.startStreaming(CAMERA_WIDTH,CAMERA_HEIGHT, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
         });
 
@@ -100,11 +102,14 @@ public class EasyOpenCVExample extends LinearOpMode
         /*
          * The core values which define the location and size of the sample regions
          */
-        //Default is 181,982
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+        static final int CAMERA_WIDTH = 320;
+        static final int CAMERA_HEIGHT = 240;
 
-        static final int REGION_WIDTH = 35;
-        static final int REGION_HEIGHT = 25;
+        static final int REGION_WIDTH = 50;
+        static final int REGION_HEIGHT = 30;
+
+        //Default is 181,982
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(CAMERA_WIDTH - REGION_WIDTH - 2,CAMERA_HEIGHT - REGION_HEIGHT - 70);
 
         final int FOUR_RING_THRESHOLD = 150;
         final int ONE_RING_THRESHOLD = 135;
@@ -125,7 +130,7 @@ public class EasyOpenCVExample extends LinearOpMode
         int avg1;
 
         // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile RingPosition position = RingPosition.FOUR;
+        protected volatile RingPosition position = RingPosition.FOUR;
 
         /*
          * This function takes the RGB frame, converts to YCrCb,
