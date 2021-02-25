@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 
 // op mode class ---------------------------------------------------------------
-@Autonomous(name = "AndysOPMode", group = "Test")
-public class AndysOPMode extends LinearOpMode {
+@Autonomous(name = "AndysBluePowershot", group = "Test")
+public class AndysBluePowershot extends LinearOpMode {
     // instruction keys --------------------------------------------------------
     // these keys make typing them into the add instruction methods easier to autocomplete
     final int driveForward = 0;
