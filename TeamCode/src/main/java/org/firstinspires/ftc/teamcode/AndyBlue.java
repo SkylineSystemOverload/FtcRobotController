@@ -52,6 +52,7 @@ public class AndyBlue extends LinearOpMode {
 
     // instatiates the autonomous instruction handler class
     AutonomousInstructions Instructions = new AutonomousInstructions();
+    ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
     OpenCvInternalCamera phoneCam;
     EasyOpenCVExample.SkystoneDeterminationPipeline pipeline;
 
@@ -149,33 +150,59 @@ public class AndyBlue extends LinearOpMode {
             }
         });
 
-        // instructions --------------------------------------------------------
-        // update information on the driver station phone screen
-        telemetry.setAutoClear(false); // when telemetry.update() is called it clears the screen, this portion helps show if the instructions are loaded
-        telemetry.addData("Instructions", "Initializing");
-        telemetry.update();
+        // spend a second reading the number of rings
+        long readRingTime = System.currentTimeMillis();
+        int noneReadings = 0;
+        int oneReadings = 0;
+        int fourReadings = 0;
+        while (System.currentTimeMillis() - readRingTime < 500) {
+            pipeline.getAnalysis();
 
-        ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
+            if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.NONE) {
+                noneReadings++;
+            }
+            else if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE) {
+                oneReadings++;
+            }
+            else if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR) {
+                fourReadings++;
+            }
+        }
+        // load instructions for the position with the most readings
+        // no ring instructions ------------------------------------------------
+        int maxReading = Math.max(Math.max(noneReadings, oneReadings), fourReadings);
+        if (maxReading == noneReadings) {
+            // drive forward and deliver goal
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
+            Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+            Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+            // strafe outta the way and park
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveBackward);
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeRight);
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 25, Instructions.driveForward);
+        }
+        // one ring instructions -----------------------------------------------
+        else if (maxReading == oneReadings) {
+            // drive forward, strafe, and deliver goal
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 96, Instructions.driveForward);
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 36, Instructions.strafeRight);
+            Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+            Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+            // back up and strafe to the left
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 18, Instructions.driveBackward);
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeLeft);
+        }
+        // four ring instructions ----------------------------------------------
+        else if (maxReading == fourReadings) {
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 132, Instructions.driveForward);
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
+            Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+            Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+            // strafe outta the way and park
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 40, Instructions.driveBackward);
+        }
 
-        // sequential instructions
-        Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
-        Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
-        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .54);
-        Instructions.AddSeqServoInstruction(5000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(50, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 16.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(5000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(50, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 16.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(5000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(50, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveForward);
-
-        // update information on the driver station phone screen
-        telemetry.addData("Loaded Instructions", "Success");
-        telemetry.addData("Mode", "Ready");
-        telemetry.update();
-        telemetry.setAutoClear(true);
 
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;
