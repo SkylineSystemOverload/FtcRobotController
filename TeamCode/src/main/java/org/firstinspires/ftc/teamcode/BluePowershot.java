@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-@Disabled
 @Autonomous(name="BluePowershot", group="Test")
 public class BluePowershot extends LinearOpMode
 {
@@ -27,7 +26,7 @@ public class BluePowershot extends LinearOpMode
 
     BNO055IMU             imu;
     Orientation           lastAngles = new Orientation();
-    double                globalAngle, power = .50, correction, rotation;
+    double                globalAngle, power = .60, correction, rotation;
     double newPower;
     double targetPower = power; //power, as defined earlier in the code, will now be named targetPower
     double currentPower;
@@ -39,10 +38,10 @@ public class BluePowershot extends LinearOpMode
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward()
     {
-        robot.motor1.setPower(newPower - correction); //sets the motors power
-        robot.motor2.setPower(newPower + correction);
-        robot.motor3.setPower(newPower - correction);
-        robot.motor4.setPower(newPower + correction);
+        robot.motor1.setPower(power - correction); //sets the motors power
+        robot.motor2.setPower(power + correction);
+        robot.motor3.setPower(power - correction);
+        robot.motor4.setPower(power + correction);
     }
     //Same as DriveForward() but in reverse
     public void DriveBackward()
@@ -211,94 +210,86 @@ public class BluePowershot extends LinearOpMode
                 robot.motor5.setPower(0);
             }
             //Strafe Right
-            else if(elapsedTime > 1000 && elapsedTime < 1500) {
+            else if(elapsedTime > 1000 && elapsedTime < 2300) {
                 StrafeRight();
             }
             //Stop Driving
-            else if(elapsedTime > 1500 && elapsedTime < 2000) {
+            else if(elapsedTime > 2300 && elapsedTime < 2500) {
                 StopDriving();
             }
             //DriveForward
-            else if(elapsedTime > 2000 && elapsedTime < 5750) {
-                currentPower = robot.motor1.getPower();
+            else if(elapsedTime > 2500 && elapsedTime < 6750) {
+                /*currentPower = robot.motor1.getPower();
                 if (!started) {
                     started = true;
                     runtime.reset(); //resets the time
-                }
-                CalculatePower();
+                    }
+                CalculatePower();*/
                 DriveForward();
             }
-            //Reset Switch!
+            /*//Reset Switch!
             else if(elapsedTime > 5750 && elapsedTime < 5800) {
                 started = false;
             }
-
+*/
             //Stop Driving
-            else if(elapsedTime > 5800 && elapsedTime < 6250) {
-                StopDriving();
-            }
-            //Strafe Right
-            else if(elapsedTime > 6250 && elapsedTime < 6500) {
-                StrafeRight();
-            }
-            //StopDriving
-            else if(elapsedTime > 6500 && elapsedTime < 7000) {
+            else if(elapsedTime > 6750 && elapsedTime < 7000) {
                 StopDriving();
             }
             //Shoot
-            else if(elapsedTime > 8500 && elapsedTime < 9500) {
+            else if(elapsedTime > 7000 && elapsedTime < 8000) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(elapsedTime > 9500 && elapsedTime < 10500) {
+            else if(elapsedTime > 8000 && elapsedTime < 10000) {
                 robot.servo1.setPosition(0.5);
             }
             //Strafe Left
-            else if(elapsedTime > 10500 && elapsedTime < 10900) {
+            else if(elapsedTime > 10000 && elapsedTime < 10500) {
                 StrafeLeft();
             }
             //Stop Driving
-            else if(elapsedTime > 10900 && elapsedTime < 11400) {
+            else if(elapsedTime > 10500 && elapsedTime < 10800) {
                 StopDriving();
             }
             //Shoot
-            else if(elapsedTime > 11400 && elapsedTime < 12400) {
+            else if(elapsedTime > 10800 && elapsedTime < 12200) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(elapsedTime > 12400 && elapsedTime < 12900) {
+            else if(elapsedTime > 12200 && elapsedTime < 13200) {
                 robot.servo1.setPosition(0.5);
             }
-            //Strafe Left***
-            else if(elapsedTime > 12900 && elapsedTime < 13400) {
-                StrafeRight();
+            //Strafe Left
+            else if(elapsedTime > 13200 && elapsedTime < 13800) {
+                StrafeLeft();
             }
             //Stop Driving
-            else if(elapsedTime > 13400 && elapsedTime < 13900) {
+            else if(elapsedTime > 13800 && elapsedTime < 14000) {
                 StopDriving();
             }
-            /*//Shoot
-            else if(elapsedTime > 13900 && elapsedTime < 14900) {
+            //Shoot
+            else if(elapsedTime > 14000 && elapsedTime < 15000) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(elapsedTime > 14900 && elapsedTime < 15400) {
+            else if(elapsedTime > 15000 && elapsedTime < 17000) {
                 robot.servo1.setPosition(0.5);
-            }*/
+            }
             //Drive Forward
-            else if(elapsedTime > 15400 && elapsedTime < 15900) {
+            else if(elapsedTime > 17000 && elapsedTime < 17500) {
                 DriveForward();
             }
             //Stop Driving
-            else if(elapsedTime > 15900 && elapsedTime < 30000) {
+            else if(elapsedTime > 17500 && elapsedTime < 30000) {
                 StopDriving();
             }
             //Turn on launcher
-            if(elapsedTime > 6500 && elapsedTime < 15400) {
+            if(elapsedTime > 4750 && elapsedTime < 17000) {
                 robot.motor7.setPower(.55);
             }
             //Turn Off Shooter
-            else if(elapsedTime > 15400 && elapsedTime < 16400) {
+            else if(elapsedTime > 17000 && elapsedTime < 30000) {
                 robot.motor7.setPower(0);
             }
         }
