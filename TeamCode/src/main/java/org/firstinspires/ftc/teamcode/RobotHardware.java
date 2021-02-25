@@ -102,7 +102,7 @@ public class RobotHardware {
         motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor4.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor6.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motor7.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         /*motor8.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
 
