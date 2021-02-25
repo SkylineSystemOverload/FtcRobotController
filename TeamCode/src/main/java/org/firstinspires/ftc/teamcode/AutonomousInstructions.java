@@ -221,7 +221,7 @@ public class AutonomousInstructions {
 
         private final double millisToSpeedUp = 500;
         private final double millisToSlowDown = 1000;
-        private final double base = .1;
+        private final double base = .15;
         private ArrayList<Integer> currentTicks = new ArrayList<>();
         private ArrayList<Integer> targetTicks = new ArrayList<>();
 

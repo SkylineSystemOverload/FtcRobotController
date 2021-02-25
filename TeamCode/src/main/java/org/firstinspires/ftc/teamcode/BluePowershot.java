@@ -224,7 +224,7 @@ public class BluePowershot extends LinearOpMode
                 if (!started) {
                     started = true;
                     runtime.reset(); //resets the time
-                    }
+                }
                 CalculatePower();
                 DriveForward();
             }
