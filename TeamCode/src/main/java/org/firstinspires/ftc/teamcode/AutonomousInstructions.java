@@ -3,6 +3,10 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.opencv.core.TickMeter;
 
 import java.util.ArrayList;
@@ -12,20 +16,21 @@ import java.util.Arrays;
 instantiate this class into an object for use in any autonomous mode
  */
 public class AutonomousInstructions {
+    // MOTORS ARE 40:1
+
     // variables for the autonomous instructions class object
-    private final double speed = .75;
+    private final double speed = .9;
     private final int TICKS_PER_REVOLUTION = 1120;
     private final int WHEEL_DIAM = 4;
     private final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
     private final double TICKS_PER_INCHES = TICKS_PER_REVOLUTION / INCHES_PER_REVOLUTION;
-    private final double INCHES_PER_TICK = 1 / TICKS_PER_INCHES;
     private long drivingDelay = 0;
 
-    private final int HD_HEX_MOTOR_MAX_RPM = 300;
-    private final int MAX_TICKS_PER_SECOND = (HD_HEX_MOTOR_MAX_RPM / 60) * TICKS_PER_REVOLUTION;
-    private final double MAX_INCHES_PER_SECOND = MAX_TICKS_PER_SECOND * INCHES_PER_TICK;
-    private final int PROPORTIONATE_TICKS_PER_SECOND = (int)(MAX_TICKS_PER_SECOND * speed);
-    private final double PROPORTIONATE_INCHES_PER_SECOND = PROPORTIONATE_TICKS_PER_SECOND * INCHES_PER_TICK;
+    private final int HD_HEX_MOTOR_MAX_RPM = 150;
+    private final double INCHES_PER_MIN = INCHES_PER_REVOLUTION * HD_HEX_MOTOR_MAX_RPM * speed;
+    private final double INCHES_PER_SECOND = INCHES_PER_MIN / 60;
+    private final double INCHES_PER_MILLISECOND = INCHES_PER_SECOND * 1000;
+    private final double MILLISECONDS_PER_INCH = 1 / INCHES_PER_MILLISECOND;
 
     // these keys make typing them into the add instruction methods easier to autocomplete
     public final int driveForward = 0;
@@ -38,10 +43,16 @@ public class AutonomousInstructions {
     // driving multipliers
     private final double driveMultiplier = 1.07;
     private final double strafeMultiplier = 1.25;
+    private final double timeMultiplier = 1;
 
     // instruction list
     ArrayList<SequentialInstruction> seqInstructions = new ArrayList<>();
     ArrayList<TimerInstruction> timerInstructions = new ArrayList<>();
+
+    // inches to milliseconds conversion
+    private long InchesToMillis(double inches) {
+        return (long)(inches * MILLISECONDS_PER_INCH);
+    }
 
     // base instructions ---------------------------------------------------------------------------
     // base instruction class for sequential instructions
@@ -238,9 +249,6 @@ public class AutonomousInstructions {
 
         // used for correction
         private boolean correcting = false;
-        private final double correctionTolerance = .1;
-        private final double correctingSpeed = .5;
-        private final int encoderTolerance = 5;
 
         /*
         initialization constructor
@@ -315,42 +323,34 @@ public class AutonomousInstructions {
             uses imu to correct if not turning, if turning make sure turning correctly
          */
         public void Check(double correction) {
-            if (this.method == turnLeft || this.method == turnRight) { // turning
-
+            // check if dead first
+            if (!this.correcting && !this.driveMotors.get(0).isBusy() && !this.driveMotors.get(1).isBusy() && !this.driveMotors.get(2).isBusy() && !this.driveMotors.get(3).isBusy()) {
+                this.dead = true;
             }
-            else { // not turning
-                // check if dead first
-                if (!this.correcting && !this.driveMotors.get(0).isBusy() && !this.driveMotors.get(1).isBusy() && !this.driveMotors.get(2).isBusy() && !this.driveMotors.get(3).isBusy()) {
-                    this.dead = true;
-                }
-
-                // apply correction otherwise
-                if (!this.dead) {
-                    // adjust multiplier to slow down
-                    // find smallest distance traveled
-                    int ticksTraveled = this.driveMotors.get(0).getCurrentPosition();
-                    for (DcMotor motor: this.driveMotors) {
-                        if (motor.getCurrentPosition() < ticksTraveled) {
-                            ticksTraveled = motor.getCurrentPosition();
-                        }
+            // apply correction otherwise
+            if (!this.dead) {
+                // adjust multiplier to slow down
+                // find smallest distance traveled
+                int ticksTraveled = this.driveMotors.get(0).getCurrentPosition();
+                for (DcMotor motor: this.driveMotors) {
+                    if (motor.getCurrentPosition() < ticksTraveled) {
+                        ticksTraveled = motor.getCurrentPosition();
                     }
-
-                    // slow down after hitting the threshold
-                    if (ticksTraveled > this.distanceThreshold && !this.slowingDown) {
-                        this.slowStartTime = System.currentTimeMillis();
-                        this.slowingDown = true;
-                    }
-
-                    // adjust the multiplier
-                    this.AdjustMultiplier();
-
-                    // drive
-                    this.driveMotors.get(0).setPower(speed * this.speedMultiplier);
-                    this.driveMotors.get(1).setPower(speed * this.speedMultiplier);
-                    this.driveMotors.get(2).setPower(speed * this.speedMultiplier);
-                    this.driveMotors.get(3).setPower(speed * this.speedMultiplier);
-
                 }
+                // slow down after hitting the threshold
+                if (ticksTraveled > this.distanceThreshold && !this.slowingDown) {
+                    this.slowStartTime = System.currentTimeMillis();
+                    this.slowingDown = true;
+                }
+                // adjust the multiplier
+                this.AdjustMultiplier();
+                // drive
+                this.driveMotors.get(0).setPower(speed * this.speedMultiplier);
+                this.driveMotors.get(1).setPower(speed * this.speedMultiplier);
+                this.driveMotors.get(2).setPower(speed * this.speedMultiplier);
+                this.driveMotors.get(3).setPower(speed * this.speedMultiplier);
+
+
             }
             if (this.dead) {
                 this.OnDeath();
@@ -435,6 +435,104 @@ public class AutonomousInstructions {
         }
     }
 
+    // sequential turn to angle instruction
+    private class SequentialTurningInstruction extends SequentialInstruction {
+        // private vars used
+        private final ArrayList<DcMotor> driveMotors;
+        private int degrees;
+        private final PIDHardware pidRotate;
+        private final RobotHardware robot;
+        private Orientation lastAngles;
+        private double globalAngle;
+        private double internalSpeed = speed;
+
+        public SequentialTurningInstruction(long delay, PIDHardware pidRotate, RobotHardware robot, Orientation lastAngles, ArrayList<DcMotor> driveMotors, int degrees, int methodKey) {
+            super(delay);
+            this.robot = robot;
+            this.lastAngles = lastAngles;
+            this.driveMotors = driveMotors;
+            // negative degrees is right, positive degrees is left
+            if (methodKey == turnLeft) {
+                degrees *= -1;
+            }
+            this.degrees = degrees;
+            this.pidRotate = pidRotate;
+        }
+
+        public void Perform() {
+            resetAngle();
+            if (Math.abs(degrees) > 359) {
+                this.degrees = (int) Math.copySign(359, degrees);
+            }
+            pidRotate.reset();
+            pidRotate.setSetpoint(degrees);
+            pidRotate.setInputRange(0, degrees);
+            pidRotate.setOutputRange(0, speed);
+            pidRotate.setTolerance(1);
+            pidRotate.enable();
+        }
+
+        public void Check(double correction) {
+            // check if dead
+            if (pidRotate.onTarget()) {
+                this.dead = true;
+                this.OnDeath();
+            }
+            else {
+                // do a right turn
+                if (this.degrees < 0) {
+                    if (getAngle() == 0) {
+                        // turn right to get back to 0
+                        this.driveMotors.get(0).setPower(this.internalSpeed);
+                        this.driveMotors.get(1).setPower(-this.internalSpeed);
+                        this.driveMotors.get(2).setPower(this.internalSpeed);
+                        this.driveMotors.get(3).setPower(-this.internalSpeed);
+                    }
+                    else { // turning right
+                        this.internalSpeed = pidRotate.performPID(this.getAngle());
+                        this.driveMotors.get(0).setPower(this.internalSpeed);
+                        this.driveMotors.get(1).setPower(-this.internalSpeed);
+                        this.driveMotors.get(2).setPower(this.internalSpeed);
+                        this.driveMotors.get(3).setPower(-this.internalSpeed);
+                    }
+                }
+
+                // do a left turn
+                else {
+                    this.internalSpeed = pidRotate.performPID(this.getAngle());
+                    this.driveMotors.get(0).setPower(-this.internalSpeed);
+                    this.driveMotors.get(1).setPower(this.internalSpeed);
+                    this.driveMotors.get(2).setPower(-this.internalSpeed);
+                    this.driveMotors.get(3).setPower(this.internalSpeed);
+                }
+            }
+        }
+
+        public void OnDeath() {
+            this.resetAngle();
+        }
+
+        private double getAngle() {
+            // documented in andy blue at the bottom
+            Orientation angles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+            double deltaAngle = angles.firstAngle - lastAngles.firstAngle;
+            if (deltaAngle < -180)
+                deltaAngle += 360;
+            else if (deltaAngle > 180)
+                deltaAngle -= 360;
+            globalAngle += deltaAngle;
+            lastAngles = angles;
+            return globalAngle;
+        }
+
+        private void resetAngle() {
+            //ZYX
+            lastAngles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            globalAngle = 0;
+        }
+    }
+
     // timer instructions --------------------------------------------------------------------------
 
 
@@ -449,9 +547,9 @@ public class AutonomousInstructions {
         private long driveStartTime;
         private long slowStartTime;
         private boolean slowingDown = false;
-        private final double timeThreshold;
+        private final double slowTimeThreshold;
 
-        private final double millisToSpeedUp = 500;
+        private final double millisToSpeedUp = 1000;
         private final double millisToSlowDown = 1000;
         private final double base = .15;
 
@@ -467,12 +565,11 @@ public class AutonomousInstructions {
                 inches *= strafeMultiplier;
             }
 
-            // convert inches into time
-            double ticks = inches * TICKS_PER_INCHES;
-            this.duration = ticks * MAX_TICKS_PER_SECOND * speed;
+            // turn inches into duration (millis)
+            this.duration = InchesToMillis(inches) * timeMultiplier;
 
             // create time threshold
-            this.timeThreshold = this.duration - this.millisToSlowDown;
+            this.slowTimeThreshold = this.duration - this.millisToSlowDown;
         }
 
         public void Perform() {
@@ -482,31 +579,8 @@ public class AutonomousInstructions {
                 motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
-            // switch case to set the correct powers for the different driving methods
-            switch (this.method) {
-                case driveForward:
-                    for (DcMotor motor: this.driveMotors) {
-                        motor.setPower(speed);
-                    }
-                    break;
-                case driveBackward:
-                    for (DcMotor motor: this.driveMotors) {
-                        motor.setPower(-speed);
-                    }
-                    break;
-                case strafeLeft:
-                    this.driveMotors.get(0).setPower(-speed);
-                    this.driveMotors.get(1).setPower(speed);
-                    this.driveMotors.get(2).setPower(speed);
-                    this.driveMotors.get(3).setPower(-speed);
-                    break;
-                case strafeRight:
-                    this.driveMotors.get(0).setPower(speed);
-                    this.driveMotors.get(1).setPower(-speed);
-                    this.driveMotors.get(2).setPower(-speed);
-                    this.driveMotors.get(3).setPower(speed);
-                    break;
-            }
+            // run pid stuff for turning
+
 
             // set the start time
             this.driveStartTime = System.currentTimeMillis();
@@ -517,13 +591,14 @@ public class AutonomousInstructions {
             // check if dead
             if (elapsedTime > this.duration) {
                 this.dead = true;
+                this.OnDeath();
             }
 
             // otherwise perform routine
             else {
 
                 // test if we need to start slowing down
-                if (elapsedTime > this.timeThreshold) {
+                if (elapsedTime > this.slowTimeThreshold) {
                     this.slowStartTime = System.currentTimeMillis();
                     this.slowingDown = true;
                 }
@@ -563,6 +638,14 @@ public class AutonomousInstructions {
                 for (DcMotor motor: this.driveMotors) {
                     motor.setPower(motor.getPower() * this.speedMultiplier);
                 }
+            }
+        }
+
+        // on death method
+        private void OnDeath() {
+            // kill all motors
+            for (DcMotor motor: this.driveMotors) {
+                motor.setPower(0);
             }
         }
 
@@ -670,6 +753,12 @@ public class AutonomousInstructions {
         return seqInstructions.size() + timerInstructions.size();
     }
 
+    // called to forcibly kill all instructions
+    public void KillAllInstructions() {
+        seqInstructions.clear();
+        timerInstructions.clear();
+    }
+
     // adding methods ------------------------------------------------------------------------------
     // methods to easily add instructions to the internal instruction array lists
     public void AddSeqMotorPowerInstruction(long delay, DcMotor motor, double power) {
@@ -686,6 +775,10 @@ public class AutonomousInstructions {
 
     public void AddSeqDrivingInstruction(long delay, ArrayList<DcMotor> driveMotors, double inches, int methodKey) {
         seqInstructions.add(new SequentialDrivingInstruction(delay, driveMotors, inches, methodKey));
+    }
+
+    public void AddSeqTurningInstruction(long delay, PIDHardware pidRotate, RobotHardware robot, Orientation lastAngle, ArrayList<DcMotor> driveMotors, int degrees, int methodKey) {
+        seqInstructions.add(new SequentialTurningInstruction(delay, pidRotate, robot, lastAngle, driveMotors, degrees, methodKey));
     }
 
     public void AddTestDrive(long delay, ArrayList<DcMotor> driveMotors, double inches, int methodKey) {
