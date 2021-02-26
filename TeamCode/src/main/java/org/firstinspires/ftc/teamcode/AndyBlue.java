@@ -153,7 +153,6 @@ public class AndyBlue extends LinearOpMode {
                 phoneCam.startStreaming(CAMERA_WIDTH, CAMERA_HEIGHT, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
         });
-
         // spend a second reading the number of rings
         long readRingTime = System.currentTimeMillis();
         int noneReadings = 0;
@@ -170,55 +169,117 @@ public class AndyBlue extends LinearOpMode {
                 fourReadings++;
             }
         }
-        // load instructions for the position with the most readings
-        // no ring instructions ------------------------------------------------
         int maxReading = Math.max(Math.max(noneReadings, oneReadings), fourReadings);
-        if (maxReading == noneReadings) {
-            // drive forward and deliver goal
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
-            Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-            Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-            // strafe outta the way and park
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveBackward);
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeRight);
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 25, Instructions.driveForward);
-        }
-        // one ring instructions -----------------------------------------------
-        else if (maxReading == oneReadings) {
-            // drive forward, strafe, and deliver goal
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 96, Instructions.driveForward);
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 36, Instructions.strafeRight);
-            Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-            Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-            // back up and strafe to the left
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 18, Instructions.driveBackward);
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeLeft);
-        }
-        // four ring instructions ----------------------------------------------
-        else if (maxReading == fourReadings) {
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 132, Instructions.driveForward);
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
-            Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-            Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-            // strafe outta the way and park
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 40, Instructions.driveBackward);
+
+
+        boolean wobble = false;
+        boolean powershot = true;
+
+        if (wobble && powershot) {
+            // drop off wobble goal
+            if (maxReading == noneReadings) {
+                // drive forward and deliver goal
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
+                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+                // strafe outta the way and park
+                Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveBackward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeRight);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 25, Instructions.driveForward);
+                // global position is 75, 23
+            }
+            // one ring instructions -----------------------------------------------
+            else if (maxReading == oneReadings) {
+                // drive forward, strafe, and deliver goal
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 96, Instructions.driveForward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 36, Instructions.strafeRight);
+                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+                // back up and strafe to the left
+                Instructions.AddSeqDrivingInstruction(0, driveMotors, 18, Instructions.driveBackward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeLeft);
+                // global position is 78, 18
+            }
+            // four ring instructions ----------------------------------------------
+            else if (maxReading == fourReadings) {
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 132, Instructions.driveForward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
+                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+                // strafe outta the way and park
+                Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveBackward);
+                // global position is 92, 5
+            }
+            // had a perfect power shot auto yay
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
+            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
+            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
         }
 
-        // had a perfect power shot auto yay
-        Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
-        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 8, Instructions.driveForward);    
+        if (wobble) {
+            // load instructions for the position with the most readings
+            // no ring instructions ------------------------------------------------
+            if (maxReading == noneReadings) {
+                // drive forward and deliver goal
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
+                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+                // strafe outta the way and park
+                Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveBackward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeRight);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 25, Instructions.driveForward);
+            }
+            // one ring instructions -----------------------------------------------
+            else if (maxReading == oneReadings) {
+                // drive forward, strafe, and deliver goal
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 96, Instructions.driveForward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 36, Instructions.strafeRight);
+                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+                // back up and strafe to the left
+                Instructions.AddSeqDrivingInstruction(0, driveMotors, 18, Instructions.driveBackward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeLeft);
+            }
+            // four ring instructions ----------------------------------------------
+            else if (maxReading == fourReadings) {
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 132, Instructions.driveForward);
+                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
+                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
+                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
+                // strafe outta the way and park
+                Instructions.AddSeqDrivingInstruction(0, driveMotors, 40, Instructions.driveBackward);
+            }
+        }
+
+        if (powershot) {
+            // had a perfect power shot auto yay
+            Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
+            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
+            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
+            Instructions.AddSeqDrivingInstruction(0, driveMotors, 8, Instructions.driveForward);
+        }
+
+
 
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;

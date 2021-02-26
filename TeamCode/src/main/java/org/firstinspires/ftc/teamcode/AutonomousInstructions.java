@@ -26,11 +26,11 @@ public class AutonomousInstructions {
     private final double TICKS_PER_INCHES = TICKS_PER_REVOLUTION / INCHES_PER_REVOLUTION;
     private long drivingDelay = 0;
 
-    private final int HD_HEX_MOTOR_MAX_RPM = 150;
-    private final double INCHES_PER_MIN = INCHES_PER_REVOLUTION * HD_HEX_MOTOR_MAX_RPM * speed;
-    private final double INCHES_PER_SECOND = INCHES_PER_MIN / 60;
-    private final double INCHES_PER_MILLISECOND = INCHES_PER_SECOND * 1000;
-    private final double MILLISECONDS_PER_INCH = 1 / INCHES_PER_MILLISECOND;
+    private final double MOTOR_RPM = 150 * speed;
+    private final double REVOLUTIONS_PER_SECOND = MOTOR_RPM / 60;
+    private final double INCHES_PER_SECOND = REVOLUTIONS_PER_SECOND * INCHES_PER_REVOLUTION;
+    private final double INCHES_PER_MS = INCHES_PER_SECOND / 1000;
+    private final double MS_PER_INCH = 1 / INCHES_PER_MS;
 
     // these keys make typing them into the add instruction methods easier to autocomplete
     public final int driveForward = 0;
@@ -51,7 +51,7 @@ public class AutonomousInstructions {
 
     // inches to milliseconds conversion
     private long InchesToMillis(double inches) {
-        return (long)(inches * MILLISECONDS_PER_INCH);
+        return (long)(inches * MS_PER_INCH);
     }
 
     // base instructions ---------------------------------------------------------------------------
@@ -240,6 +240,7 @@ public class AutonomousInstructions {
         private long slowStartTime;
         private boolean slowingDown = false;
         private final double distanceThreshold;
+        private boolean runToPosition = false;
 
         private final double millisToSpeedUp = 500;
         private final double millisToSlowDown = 1000;
@@ -309,12 +310,6 @@ public class AutonomousInstructions {
                     this.driveMotors.get(3).setTargetPosition(this.distance);
                     break;
             }
-
-            // set motors to run to the position
-            for (DcMotor motor: this.driveMotors) {
-                motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            }
-
             this.driveStartTime = System.currentTimeMillis();
         }
 
@@ -329,6 +324,15 @@ public class AutonomousInstructions {
             }
             // apply correction otherwise
             if (!this.dead) {
+                // switch to apply run to position
+                if (!this.runToPosition) {
+                    // set motors to run to the position
+                    for (DcMotor motor: this.driveMotors) {
+                        motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    }
+                    this.runToPosition = true;
+                }
+
                 // adjust multiplier to slow down
                 // find smallest distance traveled
                 int ticksTraveled = this.driveMotors.get(0).getCurrentPosition();
