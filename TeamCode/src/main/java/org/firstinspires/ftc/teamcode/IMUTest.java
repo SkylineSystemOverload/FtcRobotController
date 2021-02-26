@@ -13,12 +13,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-@Autonomous(name="BluePowershot", group="Test")
-public class BluePowershot extends LinearOpMode
+@Disabled
+@Autonomous(name="IMUTest", group="Test")
+public class IMUTest extends LinearOpMode
 {
     //Calls the RobotHardware class
     RobotHardware robot = new RobotHardware();
@@ -26,10 +23,7 @@ public class BluePowershot extends LinearOpMode
 
     BNO055IMU             imu;
     Orientation           lastAngles = new Orientation();
-    double                globalAngle, power = .60, correction, rotation;
-    double newPower;
-    double targetPower = power; //power, as defined earlier in the code, will now be named targetPower
-    double currentPower;
+    double                globalAngle, power = .50, correction, rotation;
 
     //Calls the PIDHardware class
     PIDHardware           pidRotate, pidDrive;
@@ -38,7 +32,7 @@ public class BluePowershot extends LinearOpMode
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward()
     {
-        robot.motor1.setPower(power - correction); //sets the motors power
+        robot.motor1.setPower(power - correction);
         robot.motor2.setPower(power + correction);
         robot.motor3.setPower(power - correction);
         robot.motor4.setPower(power + correction);
@@ -86,27 +80,6 @@ public class BluePowershot extends LinearOpMode
         robot.motor2.setPower(0);
         robot.motor3.setPower(0);
         robot.motor4.setPower(0);
-    }
-
-    public void CalculatePower()
-    {
-        if (targetPower > currentPower) {
-            newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
-        }
-        else if (targetPower < currentPower) {
-            newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
-        }
-        else {
-            newPower = targetPower;
-        }
-
-        if (newPower > targetPower && targetPower > currentPower) {
-            newPower = targetPower; //caps the power added by the graph to the power we set
-        }
-
-        if (newPower < targetPower && targetPower < currentPower) {
-            newPower = targetPower; //caps the power added by the graph to the power we set
-        }
     }
 
     //This is what happens when the init button is pushed.
@@ -172,31 +145,15 @@ public class BluePowershot extends LinearOpMode
         pidDrive.enable();
 
         //captures System.currentTimeMillis and saves it as startTime. Subtract the later time from this time to get the change in time.
-        boolean started = false;
-        long startTime = 0;
-        long elapsedTime;
-
-        boolean instruction1 = false;
-        boolean instruction2 = false;
-        boolean instruction3 = false;
-        boolean instruction4 = false;
-
+        //long startTime = System.currentTimeMillis();
 
         //Proceeds with the following code as long as the mode is active (returns false when stop button is pushed or power is disconnected).
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
         while (opModeIsActive())
         {
-            // simple switch that sets the time as soon as op mode is started (activates only once and at the beginning of the loop)
-            if (!started) {
-                started = true;
-                startTime = System.currentTimeMillis();
-            }
-
-            elapsedTime = System.currentTimeMillis() - startTime;
-
             // Use PID with imu input to drive in a straight line.
-            //Gets the correction value based on our current angle
+            //renames pidDrive.performPID(getAngle()) to correction for simple nomenclature.
             correction = pidDrive.performPID(getAngle());
 
             //Displays the realtime heading information on the phone.
@@ -207,102 +164,32 @@ public class BluePowershot extends LinearOpMode
             telemetry.update();
 
             //The series of instructions the robot will do.
-            //Reverse Collector
-            if(elapsedTime > 0 && elapsedTime < 500) {
-                robot.motor5.setPower(-0.5);
-            }
-            //Turn Off Collector
-            else if(elapsedTime > 500 && elapsedTime < 1000) {
-                robot.motor5.setPower(0);
-            }
-            //Strafe Right
-            else if(elapsedTime > 1000 && elapsedTime < 2300) {
-                StrafeRight();
-            }
-            //Stop Driving
-            else if(elapsedTime > 2300 && elapsedTime < 2500) {
-                StopDriving();
-            }
-            //DriveForward
-            else if(elapsedTime > 2500 && elapsedTime < 6550) {
-                /*currentPower = robot.motor1.getPower();
-                if (!started) {
-                    started = true;
-                    runtime.reset(); //resets the time
-                    }
-                CalculatePower();*/
-                DriveForward();
-            }
-            /*//Reset Switch!
-            else if(elapsedTime > 5750 && elapsedTime < 5800) {
-                started = false;
-            }
-*/
-            //Stop Driving
-            else if(elapsedTime > 6550 && elapsedTime < 8500) {
-                StopDriving();
-            }
-            //Shoot
-            else if(elapsedTime > 8500 && elapsedTime < 9000) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(elapsedTime > 9000 && elapsedTime < 10000) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Strafe Left
-            else if(elapsedTime > 10000 && elapsedTime < 10500) {
-                StrafeLeft();
-            }
-            //Stop Driving
-            else if(elapsedTime > 10500 && elapsedTime < 10800) {
-                StopDriving();
-            }
-            //Shoot
-            else if(elapsedTime > 10800 && elapsedTime < 12200) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(elapsedTime > 12200 && elapsedTime < 12800) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Strafe Left
-            else if(elapsedTime > 12800 && elapsedTime < 13500) {
-                StrafeLeft();
-            }
-            //Stop Driving
-            else if(elapsedTime > 13500 && elapsedTime < 14200) {
-                StopDriving();
-            }
-            //Shoot
-            else if(elapsedTime > 12000 && elapsedTime < 15200) {
-                robot.servo1.setPosition(1.2);
-            }
-            //Reset
-            else if(elapsedTime > 15200 && elapsedTime < 17000) {
-                robot.servo1.setPosition(0.5);
-            }
-            //Drive Forward
-            else if(elapsedTime > 17000 && elapsedTime < 17500) {
-                DriveForward();
-            }
-            //Stop Driving
-            else if(elapsedTime > 17500 && elapsedTime < 30000) {
-                StopDriving();
-            }
-            //Turn on launcher
-            if(elapsedTime > 4750 && elapsedTime < 17000) {
-                robot.motor7.setPower(.55);
-            }
-            //Turn Off Shooter
-            else if(elapsedTime > 17000 && elapsedTime < 30000) {
-                robot.motor7.setPower(0);
-            }
+            StrafeLeft();
+            sleep(1000);
+            StopDriving();
+            sleep(500);
+            DriveForward();
+            sleep(4000);
+            StopDriving();
+            sleep(500);
+            DriveBackward();
+            sleep(1000);
+            StopDriving();
+            sleep(500);
+            StrafeRight();
+            sleep(2500);
+            StopDriving();
+            robot.motor7.setPower(.75);
+            sleep(1500);
+            robot.servo1.setPosition(1.2);
+            sleep(2000);
+            //sleep(500);
+            //rotate(180, .5);
+            //StopDriving();
+            sleep(30000);
         }
         //Turn the motors off (this will happen once when "While opModeIsActive" loop is finished).
         StopDriving();
-        robot.motor5.setPower(0);
-        robot.motor7.setPower(0);
     }
 
     // Resets the cumulative angle tracking to zero.
@@ -312,8 +199,8 @@ public class BluePowershot extends LinearOpMode
         globalAngle = 0;
     }
 
-    //Get current cumulative angle rotation from last reset.
-    //return Angle in degrees. + = left, - = right.
+     //Get current cumulative angle rotation from last reset.
+     //return Angle in degrees. + = left, - = right.
     private double getAngle()
     {
         // We experimentally determined the Z axis is the axis we want to use for heading angle.
@@ -331,8 +218,8 @@ public class BluePowershot extends LinearOpMode
         //Returns a positive value (left) if the robot turns more than 180 deg right.
         if (deltaAngle < -180)
             deltaAngle += 360;
-            //If the angle goes above 180, start subtracting the change in the angle (so 180 is the greatest change in the angle, 360 would be 0).
-            //Returns a negative value (right) if the robot turns more than 180 deg left.
+        //If the angle goes above 180, start subtracting the change in the angle (so 180 is the greatest change in the angle, 360 would be 0).
+        //Returns a negative value (right) if the robot turns more than 180 deg left.
         else if (deltaAngle > 180)
             deltaAngle -= 360;
 

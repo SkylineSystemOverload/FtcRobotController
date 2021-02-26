@@ -4,6 +4,8 @@
 package org.firstinspires.ftc.teamcode;
 
 // imports ---------------------------------------------------------------------
+import android.view.WindowAnimationFrameStats;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -39,7 +41,7 @@ public class AndyBlue extends LinearOpMode {
 
     // op mode global vars -----------------------------------------------------
     //Calls the RobotHardware class
-    AndysRobotHardware robot = new AndysRobotHardware();
+    RobotHardware robot = new RobotHardware();
 
     BNO055IMU imu;
     Orientation lastAngles = new Orientation();
@@ -52,7 +54,6 @@ public class AndyBlue extends LinearOpMode {
 
     // instatiates the autonomous instruction handler class
     AutonomousInstructions Instructions = new AutonomousInstructions();
-    ArrayList<DcMotor> driveMotors = new ArrayList<DcMotor>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
     OpenCvInternalCamera phoneCam;
     EasyOpenCVExample.SkystoneDeterminationPipeline pipeline;
 
@@ -169,6 +170,8 @@ public class AndyBlue extends LinearOpMode {
             }
         }
         // load instructions for the position with the most readings
+        ArrayList<DcMotor> driveMotors = new ArrayList<>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
+        /*
         // no ring instructions ------------------------------------------------
         int maxReading = Math.max(Math.max(noneReadings, oneReadings), fourReadings);
         if (maxReading == noneReadings) {
@@ -202,7 +205,21 @@ public class AndyBlue extends LinearOpMode {
             // strafe outta the way and park
             Instructions.AddSeqDrivingInstruction(0, driveMotors, 40, Instructions.driveBackward);
         }
+        */
 
+        Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
+        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
+        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
+        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
+        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 8, Instructions.driveForward);
 
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;

@@ -23,6 +23,7 @@ public class AutonomousInstructions {
 
     private final int HD_HEX_MOTOR_MAX_RPM = 300;
     private final int MAX_TICKS_PER_SECOND = (HD_HEX_MOTOR_MAX_RPM / 60) * TICKS_PER_REVOLUTION;
+    private final double MAX_INCHES_PER_SECOND = MAX_TICKS_PER_SECOND * INCHES_PER_TICK;
     private final int PROPORTIONATE_TICKS_PER_SECOND = (int)(MAX_TICKS_PER_SECOND * speed);
     private final double PROPORTIONATE_INCHES_PER_SECOND = PROPORTIONATE_TICKS_PER_SECOND * INCHES_PER_TICK;
 
@@ -258,10 +259,10 @@ public class AutonomousInstructions {
             this.drive = true;
             // make the threshold
             if (inches > 20) {
-                this.distanceThreshold = this.distance * .6;
+                this.distanceThreshold = this.distance * .7;
             }
             else {
-                this.distanceThreshold = this.distance * .5;
+                this.distanceThreshold = this.distance * .6;
             }
         }
 
@@ -467,7 +468,8 @@ public class AutonomousInstructions {
             }
 
             // convert inches into time
-            this.duration = inches * PROPORTIONATE_INCHES_PER_SECOND;
+            double ticks = inches * TICKS_PER_INCHES;
+            this.duration = ticks * MAX_TICKS_PER_SECOND * speed;
 
             // create time threshold
             this.timeThreshold = this.duration - this.millisToSlowDown;
