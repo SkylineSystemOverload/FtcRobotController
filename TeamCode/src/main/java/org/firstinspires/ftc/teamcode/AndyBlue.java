@@ -66,7 +66,10 @@ public class AndyBlue extends LinearOpMode {
         robot.motor5.setPower(0);
         robot.motor6.setPower(0);
         robot.motor7.setPower(0);
+
+        Instructions.KillAllInstructions();
     }
+
 
     // initialization ----------------------------------------------------------
     //This is what happens when the init button is pushed.
@@ -128,6 +131,8 @@ public class AndyBlue extends LinearOpMode {
         //The difference between (opModeIsActive()) and (isStopRequested()) is the first requires the play (not init) button to be pushed
         //the latter does not (this is just my guess).
 
+        ArrayList<DcMotor> driveMotors = new ArrayList<>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
+
         // camera code ---------------------------------------------------------
         final int CAMERA_WIDTH = 320;
         final int CAMERA_HEIGHT = 240;
@@ -142,12 +147,10 @@ public class AndyBlue extends LinearOpMode {
         // landscape orientation, though.
         phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
 
-        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
+        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
-            public void onOpened()
-            {
-                phoneCam.startStreaming(CAMERA_WIDTH,CAMERA_HEIGHT, OpenCvCameraRotation.SIDEWAYS_LEFT);
+            public void onOpened() {
+                phoneCam.startStreaming(CAMERA_WIDTH, CAMERA_HEIGHT, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
         });
 
@@ -161,17 +164,13 @@ public class AndyBlue extends LinearOpMode {
 
             if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.NONE) {
                 noneReadings++;
-            }
-            else if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE) {
+            } else if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE) {
                 oneReadings++;
-            }
-            else if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR) {
+            } else if (pipeline.position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR) {
                 fourReadings++;
             }
         }
         // load instructions for the position with the most readings
-        ArrayList<DcMotor> driveMotors = new ArrayList<>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
-        /*
         // no ring instructions ------------------------------------------------
         int maxReading = Math.max(Math.max(noneReadings, oneReadings), fourReadings);
         if (maxReading == noneReadings) {
@@ -205,8 +204,8 @@ public class AndyBlue extends LinearOpMode {
             // strafe outta the way and park
             Instructions.AddSeqDrivingInstruction(0, driveMotors, 40, Instructions.driveBackward);
         }
-        */
 
+        // had a perfect power shot auto yay
         Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
         Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
         Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
@@ -219,7 +218,7 @@ public class AndyBlue extends LinearOpMode {
         Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
         Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
         Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
-        Instructions.AddSeqDrivingInstruction(0, driveMotors, 8, Instructions.driveForward);
+        Instructions.AddSeqDrivingInstruction(0, driveMotors, 8, Instructions.driveForward);    
 
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;
@@ -254,6 +253,9 @@ public class AndyBlue extends LinearOpMode {
             telemetry.addData("Elapsed Time", elapsedTime);
             telemetry.addData("Instructions", Instructions.InstructionLeft());
             telemetry.addData("Rings", pipeline.position);
+            telemetry.addData("IMU Heading", lastAngles.firstAngle);
+            telemetry.addData("Global Heading", globalAngle);
+            telemetry.addData("Turn Rotation", rotation);
             telemetry.update();
 
         }
@@ -301,7 +303,7 @@ public class AndyBlue extends LinearOpMode {
     }
 
 
-    /*/**
+    /*
      * Rotate left or right the number of degrees. Does not support turning more than 180 degrees.
      *
      * @param degrees Degrees to turn, + is left - is right
