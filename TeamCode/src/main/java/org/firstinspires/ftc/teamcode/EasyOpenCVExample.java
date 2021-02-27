@@ -42,6 +42,12 @@ public class EasyOpenCVExample extends LinearOpMode
     OpenCvInternalCamera phoneCam;
     SkystoneDeterminationPipeline pipeline;
 
+    // presets
+    int blueXOffset = 250;
+    int blueYOffset = 130;
+    int redXOffset = 0;
+    int redYOffset = 0;
+
 
     @Override
     public void runOpMode()
@@ -64,7 +70,7 @@ public class EasyOpenCVExample extends LinearOpMode
             @Override
             public void onOpened()
             {
-                phoneCam.startStreaming(CAMERA_WIDTH,CAMERA_HEIGHT, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                phoneCam.startStreaming(CAMERA_WIDTH,CAMERA_HEIGHT, OpenCvCameraRotation.SIDEWAYS_RIGHT);
             }
         });
 
@@ -106,10 +112,10 @@ public class EasyOpenCVExample extends LinearOpMode
         static final int CAMERA_HEIGHT = 240;
 
         static final int REGION_WIDTH = 50;
-        static final int REGION_HEIGHT = 30;
+        static final int REGION_HEIGHT = 32;
 
         //Default is 181,982
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(CAMERA_WIDTH - REGION_WIDTH - 2,CAMERA_HEIGHT - REGION_HEIGHT - 70);
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(250,130);
 
         final int FOUR_RING_THRESHOLD = 150;
         final int ONE_RING_THRESHOLD = 135;

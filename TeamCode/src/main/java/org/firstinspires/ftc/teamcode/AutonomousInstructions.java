@@ -19,7 +19,7 @@ public class AutonomousInstructions {
     // MOTORS ARE 40:1
 
     // variables for the autonomous instructions class object
-    private final double speed = .9;
+    private final double speed = .6;
     private final int TICKS_PER_REVOLUTION = 1120;
     private final int WHEEL_DIAM = 4;
     private final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
@@ -43,7 +43,7 @@ public class AutonomousInstructions {
     // driving multipliers
     private final double driveMultiplier = 1.07;
     private final double strafeMultiplier = 1.25;
-    private final double timeMultiplier = 1;
+    private final double timeMultiplier = 1.25;
 
     // instruction list
     ArrayList<SequentialInstruction> seqInstructions = new ArrayList<>();
@@ -547,7 +547,7 @@ public class AutonomousInstructions {
         private final int method;
 
         // used for speeding up and slowing down
-        private double speedMultiplier;
+        private double speedMultiplier = 1;
         private long driveStartTime;
         private long slowStartTime;
         private boolean slowingDown = false;
@@ -556,6 +556,11 @@ public class AutonomousInstructions {
         private final double millisToSpeedUp = 1000;
         private final double millisToSlowDown = 1000;
         private final double base = .15;
+
+        // final correcting
+        private final double correctionSpeed = .2;
+        private final double correctionTolerance = .5;
+        private boolean correct = false;
 
         public TestMotorDrive(long delay, ArrayList<DcMotor> driveMotors, double inches, int methodKey) {
             super(delay);
@@ -570,7 +575,7 @@ public class AutonomousInstructions {
             }
 
             // turn inches into duration (millis)
-            this.duration = InchesToMillis(inches) * timeMultiplier;
+            this.duration = InchesToMillis(inches);
 
             // create time threshold
             this.slowTimeThreshold = this.duration - this.millisToSlowDown;
@@ -593,9 +598,12 @@ public class AutonomousInstructions {
         public void Check(double correction) {
             final long elapsedTime = System.currentTimeMillis() - this.driveStartTime;
             // check if dead
-            if (elapsedTime > this.duration) {
-                this.dead = true;
+            if (this.dead) {
                 this.OnDeath();
+            }
+
+            if (elapsedTime > this.duration) {
+                this.FinalCorrection(correction);
             }
 
             // otherwise perform routine
@@ -608,7 +616,7 @@ public class AutonomousInstructions {
                 }
 
                 // adjust multiplier
-                this.AdjustMultiplier();
+                //this.AdjustMultiplier();
 
                 // switch case since the sign of the speed value determines motor spin direction
                 switch (this.method) {
@@ -656,14 +664,6 @@ public class AutonomousInstructions {
         // speed multiplier function
         private void AdjustMultiplier() {
             double value;
-
-            /*final double twoSeocndsQuadraticConstantA = 2.5 * Math.pow(10, -7)
-            if (this.slowingDown) {
-                value = 1 - twoSeocndsQuadraticConstantA * Math.pow(System.currentTimeMillis() - this.slowStartTime, 2);
-            }
-            else {
-                value = twoSeocndsQuadraticConstantA * Math.pow(System.currentTimeMillis() - this.driveStartTime, 2) + this.base;
-            }*/
 
             // test
             if (this.slowingDown) {
@@ -717,6 +717,20 @@ public class AutonomousInstructions {
             return ((elapsedTime-x2) * (elapsedTime-x3)) / ((x1-x2) * (x1-x3)) * y1 +
                     ((elapsedTime-x1) * (elapsedTime-x3)) / ((x2-x1) * (x2-x3)) * y2 +
                     ((elapsedTime-x1) * (elapsedTime-x2)) / ((x3-x1) * (x3-x2)) * y3;
+        }
+
+
+        // correction function
+        private void FinalCorrection(double correction) {
+            if (Math.abs(correction) > this.correctionTolerance) {
+                // correct
+                this.driveMotors.get(0).setPower(correction);
+                this.driveMotors.get(1).setPower(-correction);
+                this.driveMotors.get(2).setPower(correction);
+                this.driveMotors.get(3).setPower(-correction);
+            } else {
+                this.dead = true;
+            }
         }
     }
 

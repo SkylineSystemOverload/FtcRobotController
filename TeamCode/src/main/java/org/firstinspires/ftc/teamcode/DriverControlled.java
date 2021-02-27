@@ -13,6 +13,8 @@ import com.qualcomm.robotcore.util.Range;
 
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.opencv.core.Mat;
+
 @TeleOp(name="DriverControlled", group="Test")
 
 public class DriverControlled extends OpMode{
@@ -32,6 +34,11 @@ public class DriverControlled extends OpMode{
     boolean goingUp = false;
     final int travelDistance = 440; // literally just a guess
     final int encoderTolerance = 5;
+
+    boolean add = false;
+    boolean subtract = false;
+    double powerValue = .5;
+
 
     // CONSTANTS
 
@@ -102,15 +109,35 @@ public class DriverControlled extends OpMode{
         }
 
         // launcher statements ---------------------------------------------------------------------
-        if(G1RT>0 && G1RT<.75) { // rev launcher
-            robot.motor7.setPower(.5);
-        }
-        else if (G1RT > .75) {
-            robot.motor7.setPower(G1RT);
-        }
-        else { // stop launcher
+        // revving
+        if (G1RT > 0) {
+            robot.motor7.setPower(powerValue);
+        } else {
             robot.motor7.setPower(0);
         }
+        // adjusting power value
+        if (G1dpad_up && !add) {
+            powerValue += .05;
+            add = true;
+        } else if (G1dpad_down && !subtract) {
+            powerValue -= .05;
+            subtract = true;
+        }
+        // reset the adding and subtracting
+        if (!G1dpad_up && add) {
+            add = false;
+        }
+        if (!G1dpad_down && subtract) {
+            subtract = false;
+        }
+
+        // cap power values
+        if (powerValue > 1) {
+            powerValue = 1;
+        } else if (powerValue < 0) {
+            powerValue = 0;
+        }
+        powerValue = Math.round(powerValue * 100) / 100;
 
         // shooter and intake servo statements -----------------------------------------------------
         if(G1x) { // use shooting and intake clean up servo
@@ -124,13 +151,13 @@ public class DriverControlled extends OpMode{
         }
 
         // wobble arm statements -------------------------------------------------------------------
-        if(G1a) { // lift wobble arm
+        if(G1b) { // lift wobble arm
 
             robot.motor6.setTargetPosition(0);
             robot.motor6.setPower(.3);
 
         }
-        else if (G1b) { // lower wobble arm
+        else if (G1a) { // lower wobble arm
             // reset encoder and set to move to the distance at .5 speed
             robot.motor6.setTargetPosition(travelDistance);
             robot.motor6.setPower(.3);
@@ -165,9 +192,7 @@ public class DriverControlled extends OpMode{
         telemetry.addData("motor5 Power", robot.motor5.getPower());
         telemetry.addData("motor6 Power", robot.motor6.getPower());
         telemetry.addData("motor7 Power", robot.motor7.getPower());*/
-        telemetry.addData("encoder 6", robot.motor6.getCurrentPosition());
-        telemetry.addData("wobble down", goingDown);
-        telemetry.addData("wobble up", goingUp);
+        telemetry.addData("Launcher Power Value: ", powerValue);
     }
 
     // RUN ONCE ON stop()

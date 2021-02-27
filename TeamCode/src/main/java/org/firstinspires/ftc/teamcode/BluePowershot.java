@@ -38,10 +38,10 @@ public class BluePowershot extends LinearOpMode
     //Every time the method DriveForward() is called,  it will do the instructions within the method
     public void DriveForward()
     {
-        robot.motor1.setPower(power - correction); //sets the motors power
-        robot.motor2.setPower(power + correction);
-        robot.motor3.setPower(power - correction);
-        robot.motor4.setPower(power + correction);
+        robot.motor1.setPower(newPower - correction); //sets the motors power
+        robot.motor2.setPower(newPower + correction);
+        robot.motor3.setPower(newPower - correction);
+        robot.motor4.setPower(newPower + correction);
     }
     //Same as DriveForward() but in reverse
     public void DriveBackward()
@@ -91,10 +91,10 @@ public class BluePowershot extends LinearOpMode
     public void CalculatePower()
     {
         if (targetPower > currentPower) {
-            newPower = currentPower + 3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+            newPower = currentPower + .5*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
         }
         else if (targetPower < currentPower) {
-            newPower = currentPower + -3*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
+            newPower = currentPower + -.5*Math.pow(runtime.seconds(),2); //The main equation: adds a power-curve to whatever the current power was
         }
         else {
             newPower = targetPower;
@@ -216,21 +216,21 @@ public class BluePowershot extends LinearOpMode
                 robot.motor5.setPower(0);
             }
             //Strafe Right
-            else if(elapsedTime > 1000 && elapsedTime < 2300) {
+            else if(elapsedTime > 1000 && elapsedTime < 2200) {
                 StrafeRight();
             }
             //Stop Driving
-            else if(elapsedTime > 2300 && elapsedTime < 2500) {
+            else if(elapsedTime > 2200 && elapsedTime < 2500) {
                 StopDriving();
             }
             //DriveForward
             else if(elapsedTime > 2500 && elapsedTime < 6550) {
-                /*currentPower = robot.motor1.getPower();
-                if (!started) {
+                currentPower = robot.motor1.getPower();
+                /*if (!started) {
                     started = true;
                     runtime.reset(); //resets the time
-                    }
-                CalculatePower();*/
+                    }*/
+                CalculatePower();
                 DriveForward();
             }
             /*//Reset Switch!
@@ -247,19 +247,19 @@ public class BluePowershot extends LinearOpMode
                 robot.servo1.setPosition(1.2);
             }
             //Reset
-            else if(elapsedTime > 9000 && elapsedTime < 10000) {
+            else if(elapsedTime > 9000 && elapsedTime < 9500) {
                 robot.servo1.setPosition(0.5);
             }
             //Strafe Left
-            else if(elapsedTime > 10000 && elapsedTime < 10500) {
+            else if(elapsedTime > 9500 && elapsedTime < 10100) {
                 StrafeLeft();
             }
             //Stop Driving
-            else if(elapsedTime > 10500 && elapsedTime < 10800) {
+            else if(elapsedTime > 10100 && elapsedTime < 11800) {
                 StopDriving();
             }
             //Shoot
-            else if(elapsedTime > 10800 && elapsedTime < 12200) {
+            else if(elapsedTime > 11800 && elapsedTime < 12200) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
@@ -275,7 +275,7 @@ public class BluePowershot extends LinearOpMode
                 StopDriving();
             }
             //Shoot
-            else if(elapsedTime > 12000 && elapsedTime < 15200) {
+            else if(elapsedTime > 14200 && elapsedTime < 15200) {
                 robot.servo1.setPosition(1.2);
             }
             //Reset
@@ -283,11 +283,11 @@ public class BluePowershot extends LinearOpMode
                 robot.servo1.setPosition(0.5);
             }
             //Drive Forward
-            else if(elapsedTime > 17000 && elapsedTime < 17500) {
+            else if(elapsedTime > 17000 && elapsedTime < 18000) {
                 DriveForward();
             }
             //Stop Driving
-            else if(elapsedTime > 17500 && elapsedTime < 30000) {
+            else if(elapsedTime > 18000 && elapsedTime < 30000) {
                 StopDriving();
             }
             //Turn on launcher
