@@ -14,7 +14,9 @@ import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.opencv.core.Mat;
+
 @TeleOp(name="DriverControlled", group="Test")
+
 public class DriverControlled extends OpMode{
 
     // DEFINE robot
@@ -23,6 +25,8 @@ public class DriverControlled extends OpMode{
     //variables
     // driving variables to ensure smooth transition to moving from parked
     boolean moving = false;
+    boolean driving = false;
+    boolean parked = false;
     long driveStartTime = 0;
 
     // wobble arm boolean vars
@@ -53,11 +57,8 @@ public class DriverControlled extends OpMode{
     //RUN ONCE ON start()
     @Override
     public void start() {
-
         robot.motor6.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.motor6.setTargetPosition(0);
         robot.motor6.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
     }
 
     //LOOP ON start()
@@ -107,8 +108,6 @@ public class DriverControlled extends OpMode{
             robot.motor5.setPower(0);
         }
 
-
-
         // launcher statements ---------------------------------------------------------------------
         // revving
         if (G1RT > 0) {
@@ -138,7 +137,7 @@ public class DriverControlled extends OpMode{
         } else if (powerValue < 0) {
             powerValue = 0;
         }
-        //powerValue = Math.round(powerValue * 100) / 100;
+        powerValue = Math.round(powerValue * 100) / 100;
 
         // shooter and intake servo statements -----------------------------------------------------
         if(G1x) { // use shooting and intake clean up servo
@@ -166,9 +165,9 @@ public class DriverControlled extends OpMode{
             // open finger when going down
             robot.servo4.setPosition(0);
         }
-        else { // stop wobble arm
+        /*else { // stop wobble arm
             robot.motor6.setPower(0);
-        }
+        }*/
 
         if (goingDown && Math.abs(robot.motor6.getCurrentPosition() - travelDistance) > encoderTolerance) {
             goingDown = false;
@@ -185,18 +184,15 @@ public class DriverControlled extends OpMode{
             robot.servo4.setPosition(1);
         }
 
-        // TEST
-        if (G1dpad_left) {
-            robot.servo2.setPosition(1);
-        } else if (G1dpad_right) {
-            robot.servo2.setPosition(0);
-        } else {
-            robot.servo2.setPosition(.5);
-        }
-
+        /*
+        telemetry.addData("motor1 Power", robot.motor1.getPower());
+        telemetry.addData("motor2 Power", robot.motor2.getPower());
+        telemetry.addData("motor3 Power", robot.motor3.getPower());
+        telemetry.addData("motor4 Power", robot.motor4.getPower());
+        telemetry.addData("motor5 Power", robot.motor5.getPower());
+        telemetry.addData("motor6 Power", robot.motor6.getPower());
+        telemetry.addData("motor7 Power", robot.motor7.getPower());*/
         telemetry.addData("Launcher Power Value: ", powerValue);
-        telemetry.addData("Launcher Encoder Value: ", robot.motor7.getCurrentPosition());
-        telemetry.addData("Launcher Actual Power Value: ", robot.motor7.getPower());
     }
 
     // RUN ONCE ON stop()

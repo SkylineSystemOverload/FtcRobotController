@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 
 // op mode class ---------------------------------------------------------------
-@Disabled
 @Autonomous(name = "AndyRed", group = "Test")
 public class AndyRed extends LinearOpMode {
 

@@ -118,6 +118,8 @@ public class AndyBlue extends LinearOpMode {
         telemetry.addData("imu calib status", robot.imu.getCalibrationStatus().toString());
         telemetry.update();
 
+        telemetry.addData("Mode", "running");
+        telemetry.update();
 
         // Set up parameters for driving in a straight line.
         pidDrive.setSetpoint(0);
@@ -130,6 +132,7 @@ public class AndyBlue extends LinearOpMode {
         //the latter does not (this is just my guess).
 
         ArrayList<DcMotor> driveMotors = new ArrayList<>(Arrays.asList(robot.motor1, robot.motor2, robot.motor3, robot.motor4));
+        boolean addedInstructions = false;
 
         // camera code ---------------------------------------------------------
         final int CAMERA_WIDTH = 320;

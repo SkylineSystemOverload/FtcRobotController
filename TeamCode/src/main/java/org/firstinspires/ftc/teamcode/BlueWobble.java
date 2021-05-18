@@ -21,7 +21,6 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-@Disabled
 @Autonomous(name="BlueWobble", group="Test")
 public class BlueWobble extends LinearOpMode
 {

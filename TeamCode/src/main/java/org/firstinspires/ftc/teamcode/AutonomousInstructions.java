@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -19,16 +18,15 @@ instantiate this class into an object for use in any autonomous mode
 public class AutonomousInstructions {
     // MOTORS ARE 40:1
 
-    // variables for the autonomous instructions class object that are used for unit conversions
-    private final double speed = .6;
-    private final int TICKS_PER_REVOLUTION = 576;
+    // variables for the autonomous instructions class object
+    private final double speed = .75;
+    private final int TICKS_PER_REVOLUTION = 1120;
     private final int WHEEL_DIAM = 4;
     private final double INCHES_PER_REVOLUTION = WHEEL_DIAM * Math.PI;
     private final double TICKS_PER_INCHES = TICKS_PER_REVOLUTION / INCHES_PER_REVOLUTION;
     private long drivingDelay = 0;
 
-    // conversions that allow us to convert inch distance inputs into ticks for the motors
-    private final double MOTOR_RPM = 312 * speed;
+    private final double MOTOR_RPM = 150 * speed;
     private final double REVOLUTIONS_PER_SECOND = MOTOR_RPM / 60;
     private final double INCHES_PER_SECOND = REVOLUTIONS_PER_SECOND * INCHES_PER_REVOLUTION;
     private final double INCHES_PER_MS = INCHES_PER_SECOND / 1000;
@@ -43,9 +41,13 @@ public class AutonomousInstructions {
     public final int turnRight = 5;
 
     // driving multipliers
-    private final double driveMultiplier = 0.88235294;
-    private final double strafeMultiplier = 1.07142857;
+    private final double driveMultiplier = 1.07;
+    private final double strafeMultiplier = 1.25;
+    private final double timeMultiplier = 1.25;
 
+    public Orientation lastAnglesAAA;
+    public double globalAngleAAA;
+    public double rotationAAA;
 
     // instruction list
     ArrayList<SequentialInstruction> seqInstructions = new ArrayList<>();
@@ -152,16 +154,12 @@ public class AutonomousInstructions {
         /*
         initialization constructor for this class
          */
-        public SequentialMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait, boolean ticks) {
+        public SequentialMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait) {
             // initialize the base class
             super(delay);
             // set private variables
             this.motor = motor;
-            if (ticks) {
-                this.distance = (int)inches;
-            } else {
-                this.distance = (int) Math.round(inches * TICKS_PER_INCHES);
-            }
+            this.distance = (int)Math.round(inches * TICKS_PER_INCHES);
             this.wait = wait;
         }
 
@@ -579,6 +577,7 @@ public class AutonomousInstructions {
             else if (methodKey == strafeLeft || methodKey == strafeRight) {
                 inches *= strafeMultiplier;
             }
+            inches *= timeMultiplier;
 
             // turn inches into duration (millis)
             this.duration = InchesToMillis(inches);
@@ -596,36 +595,21 @@ public class AutonomousInstructions {
 
             // set the start time
             this.driveStartTime = System.currentTimeMillis();
-            if (this.method == turnLeft) {
-                while (System.currentTimeMillis() - this.driveStartTime <= this.duration) {
-                    this.driveMotors.get(0).setPower((-speed));
-                    this.driveMotors.get(1).setPower((speed));
-                    this.driveMotors.get(2).setPower((-speed));
-                    this.driveMotors.get(3).setPower((speed));
-                }
-                this.dead = true;
-                this.OnDeath();
-            }
-            else if (this.method == turnRight) {
-                while (System.currentTimeMillis() - this.driveStartTime <= this.duration) {
-                    this.driveMotors.get(0).setPower((speed));
-                    this.driveMotors.get(1).setPower((-speed));
-                    this.driveMotors.get(2).setPower((speed));
-                    this.driveMotors.get(3).setPower((-speed));
-                }
-                this.dead = true;
-                this.OnDeath();
-            }
         }
 
         public void Check(double correction) {
             final long elapsedTime = System.currentTimeMillis() - this.driveStartTime;
-            if (elapsedTime > this.duration && (this.method != turnLeft && this.method != turnRight)) {
+            // check if dead
+            if (this.dead) {
+                this.OnDeath();
+            }
+
+            if (elapsedTime > this.duration) {
                 this.FinalCorrection(correction);
             }
 
             // otherwise perform routine
-            else if (!this.dead) {
+            else {
 
                 // test if we need to start slowing down
                 if (elapsedTime > this.slowTimeThreshold) {
@@ -634,9 +618,9 @@ public class AutonomousInstructions {
                 }
 
                 // adjust multiplier
-                //this.AdjustMultiplier();
+                this.AdjustMultiplier();
 
-
+                /*
                 // switch case since the sign of the speed value determines motor spin direction
                 switch (this.method) {
                     case driveForward:
@@ -665,7 +649,8 @@ public class AutonomousInstructions {
                         break;
                 }
 
-                /*
+                 */
+
                 // NEW TEST
                 // switch case since the sign of the speed value determines motor spin direction
                 switch (this.method) {
@@ -695,15 +680,10 @@ public class AutonomousInstructions {
                         break;
                 }
 
-                 */
 
                 // apply speed multiplier
                 for (DcMotor motor: this.driveMotors) {
                     motor.setPower(motor.getPower() * this.speedMultiplier);
-                }
-            } else {
-                for (DcMotor motor: this.driveMotors) {
-                    motor.setPower(0);
                 }
             }
         }
@@ -784,7 +764,6 @@ public class AutonomousInstructions {
                 this.driveMotors.get(2).setPower(correction);
                 this.driveMotors.get(3).setPower(-correction);
             } else {
-                this.OnDeath();
                 this.dead = true;
             }
         }
@@ -839,8 +818,8 @@ public class AutonomousInstructions {
         seqInstructions.add(new SequentialMotorPowerInstruction(delay, motor, power));
     }
 
-    public void AddSeqMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait, boolean ticks) {
-        seqInstructions.add(new SequentialMotorDistanceInstruction(delay, motor, inches, wait, ticks));
+    public void AddSeqMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait) {
+        seqInstructions.add(new SequentialMotorDistanceInstruction(delay, motor, inches, wait));
     }
 
     public void AddSeqServoInstruction(long delay, Servo servo, double position, boolean wait) {
