@@ -36,9 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 
 // op mode class ---------------------------------------------------------------
-@Disabled
-@Autonomous(name = "AndyRed", group = "Test")
-public class AndyRed extends LinearOpMode {
+@Autonomous(name = "BlueSolo", group = "Test")
+public class BlueSolo extends LinearOpMode {
 
     // op mode global vars -----------------------------------------------------
     //Calls the RobotHardware class
@@ -70,7 +69,6 @@ public class AndyRed extends LinearOpMode {
 
         Instructions.KillAllInstructions();
     }
-
 
     // initialization ----------------------------------------------------------
     //This is what happens when the init button is pushed.
@@ -156,130 +154,24 @@ public class AndyRed extends LinearOpMode {
             }
         });
 
-        boolean wobble = false;
-        boolean powershot = false;
+        // clear intake servo
+        Instructions.AddSeqServoInstruction(0, robot.servo2, .5, false);
+        Instructions.AddSeqMotorPowerInstruction(0, robot.motor5, -1);
+        Instructions.AddSeqMotorPowerInstruction(500, robot.motor5, 0);
 
-        /*
-        if (wobble && powershot) {
-            // drop off wobble goal
-            if (maxReading == noneReadings) {
-                // drive forward and deliver goal
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
-                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-                // strafe outta the way and park
-                Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveBackward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeRight);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 25, Instructions.driveForward);
-                // global position is 75, 23
-            }
-            // one ring instructions -----------------------------------------------
-            else if (maxReading == oneReadings) {
-                // drive forward, strafe, and deliver goal
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 96, Instructions.driveForward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 36, Instructions.strafeRight);
-                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-                // back up and strafe to the left
-                Instructions.AddSeqDrivingInstruction(0, driveMotors, 18, Instructions.driveBackward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeLeft);
-                // global position is 78, 18
-            }
-            // four ring instructions ----------------------------------------------
-            else if (maxReading == fourReadings) {
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 132, Instructions.driveForward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
-                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-                // strafe outta the way and park
-                Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveBackward);
-                // global position is 92, 5
-            }
-            // had a perfect power shot auto yay
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
-            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
-            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
-        }
-
-        if (wobble) {
-            // load instructions for the position with the most readings
-            // no ring instructions ------------------------------------------------
-            if (maxReading == noneReadings) {
-                // drive forward and deliver goal
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 60, Instructions.driveForward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
-                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-                // strafe outta the way and park
-                Instructions.AddSeqDrivingInstruction(0, driveMotors, 10, Instructions.driveBackward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeRight);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 25, Instructions.driveForward);
-            }
-            // one ring instructions -----------------------------------------------
-            else if (maxReading == oneReadings) {
-                // drive forward, strafe, and deliver goal
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 96, Instructions.driveForward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 36, Instructions.strafeRight);
-                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-                // back up and strafe to the left
-                Instructions.AddSeqDrivingInstruction(0, driveMotors, 18, Instructions.driveBackward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 18, Instructions.strafeLeft);
-            }
-            // four ring instructions ----------------------------------------------
-            else if (maxReading == fourReadings) {
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 132, Instructions.driveForward);
-                Instructions.AddSeqDrivingInstruction(100, driveMotors, 5, Instructions.strafeRight);
-                Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 2.45, false);
-                Instructions.AddSeqServoInstruction(0, robot.servo4, 1, false);
-                // strafe outta the way and park
-                Instructions.AddSeqDrivingInstruction(0, driveMotors, 40, Instructions.driveBackward);
-            }
-        }
-
-        if (powershot) {
-            // had a perfect power shot auto yay
-            Instructions.AddSeqDrivingInstruction(100, driveMotors, 16.5, Instructions.strafeRight);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 60, Instructions.driveForward);
-            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
-            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 7.5, Instructions.strafeLeft);
-            Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-            Instructions.AddSeqServoInstruction(500, robot.servo1, .5, false);
-            Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
-            Instructions.AddSeqDrivingInstruction(0, driveMotors, 8, Instructions.driveForward);
-        }
-
-        /*
         // had a perfect power shot auto yay
-        Instructions.AddTestDrive(100, driveMotors, 16.5, Instructions.strafeRight);
-        Instructions.AddTestDrive(0, driveMotors, 60, Instructions.driveForward);
-        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .55);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(1500, robot.servo1, .55, false);
-        Instructions.AddTestDrive(0, driveMotors, 7.5, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(1500, robot.servo1, .55, false);
-        Instructions.AddTestDrive(0, driveMotors, 7.75, Instructions.strafeLeft);
-        Instructions.AddSeqServoInstruction(3000, robot.servo1, 1, true);
-        Instructions.AddSeqServoInstruction(1500, robot.servo1, .55, false);
+        Instructions.AddTestDrive(100, driveMotors, 48, Instructions.strafeRight);
+        Instructions.AddTestDrive(0, driveMotors, 59, Instructions.driveForward);
+        Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, .43);
+        Instructions.AddSeqServoInstruction(2500, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(1500, robot.servo1, .7, false);
+        Instructions.AddTestDrive(0, driveMotors, 9.5, Instructions.strafeLeft);
+        Instructions.AddSeqServoInstruction(2500, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(1500, robot.servo1, .7, false);
+        Instructions.AddTestDrive(0, driveMotors, 9.5, Instructions.strafeLeft);
+        Instructions.AddSeqServoInstruction(2500, robot.servo1, 1, true);
+        Instructions.AddSeqServoInstruction(1500, robot.servo1, .7, false);
         Instructions.AddSeqMotorPowerInstruction(0, robot.motor7, 0);
-        Instructions.AddTestDrive(0, driveMotors, 8, Instructions.driveForward);
-         */
 
         // keep track of the start time to zero in on the actual time in the op mode
         boolean started = false;
@@ -293,8 +185,9 @@ public class AndyRed extends LinearOpMode {
         // autonomous loop (when auton is started) -----------------------------
         while (opModeIsActive()) { // only run when opmodeisactive and auto ends the op mode when instructions run out
 
-            // simple switch that sets the time as soon as op mode is started (activates once at the beginning of loop)
+            // simple switch that sets the time as soon as op mode is started and also performs wobble goal read (activates once at the beginning of loop)
             if (!started) {
+
                 // spend a second reading the number of rings
                 long readRingTime = System.currentTimeMillis();
                 int noneReadings = 0;
@@ -313,18 +206,52 @@ public class AndyRed extends LinearOpMode {
                 }
                 int maxReading = Math.max(Math.max(noneReadings, oneReadings), fourReadings);
 
+
+                // wobble goal in the second spot
                 if (maxReading == oneReadings) {
-                    position = 1;
-                } else if (maxReading == fourReadings) {
-                    position = 4;
-                } else {
-                    position = 0;
+                    // line the wobble goal up to the scoring square
+                    Instructions.AddTestDrive(100, driveMotors, 28, Instructions.driveForward);
+                    // release wobble goal
+                    Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 440, false, true);
+                    Instructions.AddSeqServoInstruction(0, robot.servo4, 0, false);
+                    // drive backward and park
+                    Instructions.AddTestDrive(2000, driveMotors, 20, Instructions.driveBackward);
+                    Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, -440, false, true);
                 }
+                // wobble goal in the third spot
+                else if (maxReading == fourReadings) {
+                    // line the wobble goal up to the scoring square
+                    Instructions.AddTestDrive(0, driveMotors, 24, Instructions.strafeLeft);
+                    Instructions.AddTestDrive(0, driveMotors, 48, Instructions.driveForward);
+                    // release wobble goal
+                    Instructions.AddSeqMotorDistanceInstruction(0, robot.motor6, 440, false, true);
+                    Instructions.AddSeqServoInstruction(0, robot.servo4, 0, false);
+                    // drive backwards and park
+                    Instructions.AddTestDrive(0, driveMotors, 44, Instructions.driveBackward);
+                    Instructions.AddSeqMotorDistanceInstruction(0, robot.motor6, -440, false, true);
+                }
+                // wobble goal in the first sport
+                else {
+                    // line up wobble goal
+                    Instructions.AddTestDrive(100, driveMotors, 10, Instructions.driveForward);
+                    Instructions.AddTestDrive(0, driveMotors, 24, Instructions.strafeLeft);
+                    // release wobble goal
+                    Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, 440, false, true);
+                    Instructions.AddSeqServoInstruction(0, robot.servo4, 0, false);
+                    // park
+                    Instructions.AddTestDrive(0, driveMotors, 4, Instructions.driveBackward);
+                    Instructions.AddSeqMotorDistanceInstruction(100, robot.motor6, -440, false, true);;
+                }
+
+
+
                 started = true;
                 startTime = System.currentTimeMillis();
+
             }
 
             elapsedTime = System.currentTimeMillis() - startTime;
+
 
             // Use PID with imu input to drive in a straight line.
             //renames pidDrive.performPID(getAngle()) to correction for simple nomenclature.
@@ -336,17 +263,22 @@ public class AndyRed extends LinearOpMode {
             // update camera
             pipeline.getAnalysis();
 
-            telemetry.addData("Correction", correction);
-            telemetry.addData("Elapsed Time", elapsedTime);
-            telemetry.addData("Instructions", Instructions.InstructionLeft());
-            telemetry.addData("Rings", pipeline.position);
-            telemetry.addData("IMU Heading", lastAngles.firstAngle);
-            telemetry.addData("Global Heading", globalAngle);
-            telemetry.addData("Turn Rotation", rotation);
-            telemetry.addData("RING INSTRUCTIONS", position);
+            telemetry.addData("Correction: ", correction);
+            telemetry.addData("Instructions: ", Instructions.InstructionLeft());
+            telemetry.addData("Rings: ", position);
+            telemetry.addData("IMU Heading: ", lastAngles.firstAngle);
+            telemetry.addData("Global Heading: ", globalAngle);
+            telemetry.addData("Turn Rotation: ", rotation);
+            /*
+            telemetry.addData("INSTRUCTIONS IMU Heading: ", Instructions.lastAnglesAAA.firstAngle);
+            telemetry.addData("INSTRUCTIONS Global Heading: ", Instructions.globalAngleAAA);
+            telemetry.addData("INSTRUCTIONS Turn Rotation: ", Instructions.rotationAAA);
+
+             */
             telemetry.update();
 
         }
+        Instructions.KillAllInstructions();
         EndOPMode();
     }
 

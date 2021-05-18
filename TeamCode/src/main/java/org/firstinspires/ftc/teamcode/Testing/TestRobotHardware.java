@@ -10,20 +10,20 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 
-public class RobotHardware {
+public class TestRobotHardware {
     //  INSTANTIATE MOTORS AND SERVOS
     public DcMotor motor1;
-    public DcMotor motor2;
-    public DcMotor motor3;
-    public DcMotor motor4;
-    public DcMotor motor5;
-    public DcMotor motor6;
-    public DcMotor motor7;
+    //public DcMotor motor2;
+    //public DcMotor motor3;
+    //public DcMotor motor4;
+    //public DcMotor motor5;
+    //public DcMotor motor6;
+    //public DcMotor motor7;
     /* DcMotor motor8;*/
-    public Servo servo1;
-    public Servo servo2;
-    public Servo servo3;
-    public Servo servo4;
+    //public Servo servo1;
+    //public Servo servo2;
+    //public Servo servo3;
+    //public Servo servo4;
     /*public Servo servo5;
     public Servo servo6;
     public Servo servo7;
@@ -34,10 +34,10 @@ public class RobotHardware {
     public Servo servo12;*/
 
     //INSTANTIATE SENSORS
-    public BNO055IMU imu;
+    //public BNO055IMU imu;
     //public GyroSensor gyroSensor;
     //public ColorSensor colorSensor;
-    public DcMotor LeftEncoder, RightEncoder, BackEncoder;
+    //public DcMotor LeftEncoder, RightEncoder, BackEncoder;
 
     //CREATE THE HARDWARE MAP
     HardwareMap hardwareMap;
@@ -45,19 +45,19 @@ public class RobotHardware {
     public void init(HardwareMap hardwareMap) {
 
         // DEFINE MOTORS AND SERVOS
-        motor1 = hardwareMap.get(DcMotor.class, "motor1"); // front left
-        motor2 = hardwareMap.get(DcMotor.class, "motor2"); // front right
-        motor3 = hardwareMap.get(DcMotor.class, "motor3"); // back left
-        motor4 = hardwareMap.get(DcMotor.class, "motor4"); // back right
-        motor5 = hardwareMap.get(DcMotor.class, "motor5"); // intake
-        motor6 = hardwareMap.get(DcMotor.class, "motor6"); // wobble
-        motor7 = hardwareMap.get(DcMotor.class, "motor7"); // gun
-        /*motor8 = hardwareMap.get(DcMotor.class, "motor8");*/
-        servo1 = hardwareMap.get(Servo.class, "servo1"); // reload servo
-        servo2 = hardwareMap.get(Servo.class, "servo2"); // cleaver
-        servo3 = hardwareMap.get(Servo.class, "servo3"); // intake clean servo
-        servo4 = hardwareMap.get(Servo.class, "servo4"); // wobble finger
-        /*servo5 = hardwareMap.get(Servo.class, "servo5");
+        motor1 = hardwareMap.get(DcMotor.class, "motor1");
+        /*motor2 = hardwareMap.get(DcMotor.class, "motor2");
+        motor3 = hardwareMap.get(DcMotor.class, "motor3");
+        motor4 = hardwareMap.get(DcMotor.class, "motor4");
+        motor5 = hardwareMap.get(DcMotor.class, "motor5");
+        motor6 = hardwareMap.get(DcMotor.class, "motor6");
+        motor7 = hardwareMap.get(DcMotor.class, "motor7");
+        motor8 = hardwareMap.get(DcMotor.class, "motor8");
+        servo1 = hardwareMap.get(Servo.class, "servo1");
+        servo2 = hardwareMap.get(Servo.class, "servo2");
+        servo3 = hardwareMap.get(Servo.class, "servo3");
+        servo4 = hardwareMap.get(Servo.class, "servo4");
+        servo5 = hardwareMap.get(Servo.class, "servo5");
         servo6 = hardwareMap.get(Servo.class, "servo6");
         servo7 = hardwareMap.get(Servo.class, "servo7");
         servo8 = hardwareMap.get(Servo.class, "servo8");
@@ -68,7 +68,7 @@ public class RobotHardware {
 
 
         //DEFINE SENSORS
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        //imu = hardwareMap.get(BNO055IMU.class, "imu");
         //gyroSensor = hardwareMap.get(GyroSensor.class, "gyroSensor");
         //colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
         //LeftEncoder = hardwareMap.dcMotor.get("LeftEncoder");
@@ -79,18 +79,18 @@ public class RobotHardware {
 
         //SET MOTOR POWERS
         motor1.setPower(0);
-        motor2.setPower(0);
+        /*motor2.setPower(0);
         motor3.setPower(0);
         motor4.setPower(0);
         motor5.setPower(0);
         motor6.setPower(0);
         motor7.setPower(0);
-        /*motor8.setPower(0);*/
+        motor8.setPower(0);*/
 
         //SET MOTOR MODES
 
         motor1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        /*motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor5.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -99,7 +99,7 @@ public class RobotHardware {
         /*motor8.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);*/
 
         motor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //...RunMode.RUN_TO_POSITION
-        motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        /*motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor4.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -109,7 +109,7 @@ public class RobotHardware {
 
         //SET MOTOR zeroPowerBehavior
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); //...ZeroPowerBehavior.FLOAT
-        motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        /*motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor4.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor5.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -119,7 +119,7 @@ public class RobotHardware {
 
         //SET MOTOR DIRECTIONS
         motor1.setDirection(DcMotor.Direction.REVERSE);
-        motor2.setDirection(DcMotor.Direction.FORWARD);
+        /*motor2.setDirection(DcMotor.Direction.FORWARD);
         motor3.setDirection(DcMotor.Direction.REVERSE);
         motor4.setDirection(DcMotor.Direction.FORWARD);
         motor5.setDirection(DcMotor.Direction.REVERSE);
@@ -130,7 +130,7 @@ public class RobotHardware {
         servo4.setPosition(1);
 
         //CALIBRATE SENSORS
-        //gyroSensor.calibrate();
+        //gyroSensor.calibrate();*/
 
     }
 }
