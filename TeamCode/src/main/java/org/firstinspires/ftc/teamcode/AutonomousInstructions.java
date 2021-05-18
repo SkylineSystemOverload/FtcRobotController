@@ -152,16 +152,12 @@ public class AutonomousInstructions {
         /*
         initialization constructor for this class
          */
-        public SequentialMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait, boolean ticks) {
+        public SequentialMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait) {
             // initialize the base class
             super(delay);
             // set private variables
             this.motor = motor;
-            if (ticks) {
-                this.distance = (int)inches;
-            } else {
-                this.distance = (int) Math.round(inches * TICKS_PER_INCHES);
-            }
+            this.distance = (int) Math.round(inches * TICKS_PER_INCHES);
             this.wait = wait;
         }
 
@@ -201,18 +197,16 @@ public class AutonomousInstructions {
         // private variables used
         private final Servo servo;
         private final double position;
-        private final boolean wait;
 
         /*
         initialization constructor for this class
          */
-        public SequentialServoInstruction(long delay, Servo servo, double position, boolean wait) {
+        public SequentialServoInstruction(long delay, Servo servo, double position) {
             // init base class
             super(delay);
             // set private variables
             this.servo = servo;
             this.position = position;
-            this.wait = wait;
         }
 
         /*
@@ -221,16 +215,9 @@ public class AutonomousInstructions {
          */
         public void Perform() {
             this.servo.setPosition(this.position);
-            this.dead = !this.wait;
+            this.dead = true;
         }
 
-        /*
-        check method
-            instruction kills the instruction if waiting
-         */
-        public void Check(double placeholder) {
-            if (this.servo.getPosition() == this.position) this.dead = true;
-        }
     }
 
     // sequential drive to distance instruction
@@ -633,10 +620,7 @@ public class AutonomousInstructions {
                     this.slowingDown = true;
                 }
 
-                // adjust multiplier
-                //this.AdjustMultiplier();
-
-
+                /*
                 // switch case since the sign of the speed value determines motor spin direction
                 switch (this.method) {
                     case driveForward:
@@ -665,7 +649,11 @@ public class AutonomousInstructions {
                         break;
                 }
 
-                /*
+                 */
+
+                // adjust multiplier
+                this.AdjustMultiplier();
+
                 // NEW TEST
                 // switch case since the sign of the speed value determines motor spin direction
                 switch (this.method) {
@@ -695,12 +683,6 @@ public class AutonomousInstructions {
                         break;
                 }
 
-                 */
-
-                // apply speed multiplier
-                for (DcMotor motor: this.driveMotors) {
-                    motor.setPower(motor.getPower() * this.speedMultiplier);
-                }
             } else {
                 for (DcMotor motor: this.driveMotors) {
                     motor.setPower(0);
@@ -774,7 +756,6 @@ public class AutonomousInstructions {
                     ((elapsedTime-x1) * (elapsedTime-x2)) / ((x3-x1) * (x3-x2)) * y3;
         }
 
-
         // correction function
         private void FinalCorrection(double correction) {
             if (Math.abs(correction) > this.correctionTolerance) {
@@ -839,12 +820,12 @@ public class AutonomousInstructions {
         seqInstructions.add(new SequentialMotorPowerInstruction(delay, motor, power));
     }
 
-    public void AddSeqMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait, boolean ticks) {
-        seqInstructions.add(new SequentialMotorDistanceInstruction(delay, motor, inches, wait, ticks));
+    public void AddSeqMotorDistanceInstruction(long delay, DcMotor motor, double inches, boolean wait) {
+        seqInstructions.add(new SequentialMotorDistanceInstruction(delay, motor, inches, wait));
     }
 
-    public void AddSeqServoInstruction(long delay, Servo servo, double position, boolean wait) {
-        seqInstructions.add(new SequentialServoInstruction(delay, servo, position, wait));
+    public void AddSeqServoInstruction(long delay, Servo servo, double position) {
+        seqInstructions.add(new SequentialServoInstruction(delay, servo, position));
     }
 
     public void AddSeqDrivingInstruction(long delay, ArrayList<DcMotor> driveMotors, double inches, int methodKey) {
