@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -44,18 +45,18 @@ public class RobotHardware {
     public void init(HardwareMap hardwareMap) {
 
         // DEFINE MOTORS AND SERVOS
-        motor1 = hardwareMap.get(DcMotor.class, "motor1");
-        motor2 = hardwareMap.get(DcMotor.class, "motor2");
-        motor3 = hardwareMap.get(DcMotor.class, "motor3");
-        motor4 = hardwareMap.get(DcMotor.class, "motor4");
-        motor5 = hardwareMap.get(DcMotor.class, "motor5");
-        motor6 = hardwareMap.get(DcMotor.class, "motor6");
-        motor7 = hardwareMap.get(DcMotor.class, "motor7");
+        motor1 = hardwareMap.get(DcMotor.class, "motor1"); // front left
+        motor2 = hardwareMap.get(DcMotor.class, "motor2"); // front right
+        motor3 = hardwareMap.get(DcMotor.class, "motor3"); // back left
+        motor4 = hardwareMap.get(DcMotor.class, "motor4"); // back right
+        motor5 = hardwareMap.get(DcMotor.class, "motor5"); // intake
+        motor6 = hardwareMap.get(DcMotor.class, "motor6"); // wobble
+        motor7 = hardwareMap.get(DcMotor.class, "motor7"); // gun
         /*motor8 = hardwareMap.get(DcMotor.class, "motor8");*/
-        servo1 = hardwareMap.get(Servo.class, "servo1");
-        servo2 = hardwareMap.get(Servo.class, "servo2");
-        servo3 = hardwareMap.get(Servo.class, "servo3");
-        servo4 = hardwareMap.get(Servo.class, "servo4");
+        servo1 = hardwareMap.get(Servo.class, "servo1"); // reload servo
+        servo2 = hardwareMap.get(Servo.class, "servo2"); // cleaver
+        servo3 = hardwareMap.get(Servo.class, "servo3"); // intake clean servo
+        servo4 = hardwareMap.get(Servo.class, "servo4"); // wobble finger
         /*servo5 = hardwareMap.get(Servo.class, "servo5");
         servo6 = hardwareMap.get(Servo.class, "servo6");
         servo7 = hardwareMap.get(Servo.class, "servo7");
@@ -103,7 +104,7 @@ public class RobotHardware {
         motor4.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor5.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor6.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motor7.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor7.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         /*motor8.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);*/
 
         //SET MOTOR zeroPowerBehavior
@@ -123,10 +124,10 @@ public class RobotHardware {
         motor4.setDirection(DcMotor.Direction.FORWARD);
         motor5.setDirection(DcMotor.Direction.REVERSE);
         //SET SERVO POSITION
-        servo1.setPosition(.5);
-        servo2.setPosition(-.1);
+        servo1.setPosition(.7);
+        servo2.setPosition(1);
         servo3.setPosition(0.275);
-        servo4.setPosition(0);
+        servo4.setPosition(1);
 
         //CALIBRATE SENSORS
         //gyroSensor.calibrate();

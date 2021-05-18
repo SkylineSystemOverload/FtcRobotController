@@ -17,6 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+@Disabled
 @Autonomous(name="BluePowershot", group="Test")
 public class BluePowershot extends LinearOpMode
 {

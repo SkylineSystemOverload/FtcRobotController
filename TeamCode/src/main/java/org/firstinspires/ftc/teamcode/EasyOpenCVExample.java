@@ -36,6 +36,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
+@Disabled
 @TeleOp
 public class EasyOpenCVExample extends LinearOpMode
 {
@@ -43,10 +44,25 @@ public class EasyOpenCVExample extends LinearOpMode
     SkystoneDeterminationPipeline pipeline;
 
     // presets
-    int blueXOffset = 250;
-    int blueYOffset = 130;
+    int blueXOffset = 20;
+    int blueYOffset = 78;
     int redXOffset = 0;
     int redYOffset = 0;
+
+    int xOffset = 0, yOffset = 0;
+    /*
+    // set camera offsets
+    public EasyOpenCVExample(boolean blue) {
+        if (blue) {
+            xOffset = blueXOffset;
+            yOffset = blueYOffset;
+        } else {
+            xOffset = redXOffset;
+            yOffset = redYOffset;
+        }
+    }
+
+     */
 
 
     @Override
@@ -115,7 +131,7 @@ public class EasyOpenCVExample extends LinearOpMode
         static final int REGION_HEIGHT = 32;
 
         //Default is 181,982
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(250,130);
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(CAMERA_WIDTH - REGION_WIDTH - 20,CAMERA_HEIGHT - REGION_HEIGHT - 75);
 
         final int FOUR_RING_THRESHOLD = 150;
         final int ONE_RING_THRESHOLD = 135;
